@@ -41,7 +41,7 @@ formas ou alçapões, i.e. o bloco (na matriz do mapa) correspendente
 --exemplo
 --mario = Personagem (5,5) Jogador (0,0) Este (1,1) False False 3 500 (False,0)
 
-fantasma = Personagem {tipo= Fantasma, ressalta = True, vida= 1, aplicaDano = (False,0)} -- falta adicionar o tamanho mas em teoria será (1,1) ?
-dk = Personagem {tipo= MacacoMalvado, ressalta = True, vida = 8, aplicaDano = (False,0)} --vida 8 pq há 8 alçapões
-mario = Persongaem {tipo = Jogador, ressalta = False, vida = 3}
+fantasma = Personagem {tipo= Fantasma, tamanho= (1,1), ressalta = True, vida= 1, aplicaDano = (False,0)} -- tamanho dos fantasmas = tamanho mario = (1,1)?
+dk = Personagem {tipo= MacacoMalvado,tamanho= (2,2), ressalta = True, vida = 8, aplicaDano = (False,0)} --vida 8 pq há 8 alçapões, tamanho (2,2)?
+mario = Personagem {tipo = Jogador,tamanho= (1,1), ressalta = False, vida = 3}
 

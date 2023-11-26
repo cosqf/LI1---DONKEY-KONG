@@ -9,8 +9,8 @@ Módulo para a realização da Tarefa 3 de LI1 em 2023/24.
 module Tarefa3 where
 
 import LI12324
-import GHC.Read (parens)
-import GHC.Base (Bool(False))
+import Tarefa1 
+import Tarefa2
 
 movimenta :: Semente -> Tempo -> Jogo -> Jogo
 movimenta = undefined
@@ -19,8 +19,8 @@ movimenta = undefined
 {-
 1. Um inimigo perde 1 (uma) vida se estiver dentro da hitbox de dano de
 um jogador armado. Por jogador armado entende-se um jogador cuja
-componente aplicaDano esteja activa e com tempo restante. Note
-que a hitbox de dano não é a mesma hitbox do jogador, mas antes uma
+componente aplicaDano esteja activa e com tempo restante. Note                fantasmahit, hitboxMartelo
+que a hitbox de dano não é a mesma hitbox do jogador, mas antes uma       
 hitbox com as dimensões do jogador posicionada exactamente à frente
 do jogador, cf. figura 8.
 
@@ -51,19 +51,40 @@ estrela/martelo/moeda ocupam um bloco da matriz na totalidade.
 -}
 
 
+fantasmahit :: [Hitbox] -> Hitbox -> Personagem          --recebe lista de inimigos e a hitbox do martelo
+fantasmahit hitfant h 
+    |elem h hitfant = fantasma {vida= v-1}        --se a hitbox tocar nas hitboxes do fantasma perde uma vida
+    |otherwise = fantasmahit hitfant h
+        where 
+            hitfant = map hitboxPersonagem fantasmas
+            fantasmas = [fantasma]       --n sei bem se está bem configurado
+            v= vida fantasma
+
+
+
+
+hitboxMartelo :: Personagem -> Hitbox
+hitboxMartelo mario@(Personagem {posicao = (x, y), direcao = d, aplicaDano = (True, t)}) = --n sei se é eficiente ter a hitboxmartelo separada do fantasmahit?
+    let (w, h) = tamanho mario      --copiei o formato da tarefa 1
+    in
+        case d of
+            Este -> ((x-w/2+1, y-h/2), (x+w/2+1, y+h/2)) --forma hitbox à direita do mario
+            Oeste -> ((x-w/2-1, y-h/2), (x+w/2-1, y+h/2)) --forma hitbox à esquerda do mario
+
 
 fantasmamorto :: [Personagem] -> [Personagem] -- suposto usar na lista q contem os inimigos no mapa apenas
 fantasmamorto (x:xs)= if tipo x == Fantasma && vida x == 0  --verifica se é fantasma e se tem 0 vidas
                     then fantasmamorto xs --se sim, tira da lista
                     else x: fantasmamorto xs --se n, mantem
 
-fantasmamortopontos ::[Personagem] -> Personagem-> Personagem  -- recebe pontos por matar um fantasma
+fantasmamortopontos ::[Personagem] -> Personagem-> Personagem  -- recebe pontos por matar um fantasma, n está especificado q temos q fzr isto mas ?
 fantasmamortopontos (x:xs) mario@(Personagem{pontos = p})
     |tipo x == Fantasma && vida x == 0 = mario {pontos= p+500} -- mais 500 pontos 
 
-jogadorhit ::[Personagem] -> Personagem -> Personagem --verifica se outros personagens estao na mesma posicao q o mario
+
+jogadorhit ::[Personagem] -> Personagem -> Personagem --verifica se a colisao de personagens com o mario acontece
 jogadorhit (x:xs) mario@(Personagem{vida = v})
-    |posicao x == posicao mario = mario {vida= v-1} --se sin tira uma vida
+    |colisoesPersonagens x mario = mario {vida= v-1} --se sim tira uma vida
     |otherwise = jogadorhit xs mario
 
 
@@ -84,7 +105,7 @@ apanhacole (((Moeda,x):t)) mario@(Personagem {pontos = p}) --verifica se a posic
     |otherwise = apanhacole t mario -- se n continua a verificar 
 apanhacole (((Martelo,x):t)) mario@(Personagem {aplicaDano=(b,d)})
     |x == posicao mario = mario{aplicaDano =(True,10)} --se a posicao do mario for igual à do martelo, o mario recebe a condição de dar dano
-    |otherwise = apanhacole t mario --atenção o tempo n está definido ainda
+    |otherwise = apanhacole t mario --atenção o tempo n está definido ainda, só na tarefa 4
 
 
 
