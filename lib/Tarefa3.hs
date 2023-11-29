@@ -53,14 +53,12 @@ estrela/martelo/moeda ocupam um bloco da matriz na totalidade.
 
 fantasmahit :: [Hitbox] -> Hitbox -> Personagem          --recebe lista de inimigos e a hitbox do martelo
 fantasmahit hitfant h 
-    |elem h hitfant = fantasma {vida= v-1}        --se a hitbox tocar nas hitboxes do fantasma perde uma vida
+    |overlap h hitfant = fantasma {vida= v-1}        --se a hitbox tocar nas hitboxes do fantasma perde uma vida
     |otherwise = fantasmahit hitfant h
         where 
             hitfant = map hitboxPersonagem fantasmas
             fantasmas = [fantasma]       --n sei bem se está bem configurado
             v= vida fantasma
-
-
 
 
 hitboxMartelo :: Personagem -> Hitbox
