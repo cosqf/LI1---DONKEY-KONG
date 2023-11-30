@@ -32,7 +32,7 @@ podem colidir entre estes.
 6. Escadas não podem começar/terminar em alçapões, e pelo menos uma
 das suas extremidades tem que ser do tipo Plataforma.
 
-7. Alçapões não podem ser menos largos que o jogador.
+7. Alçapões não podem ser menos largos que o jogador.                       alcapaoL
 
 8. Não podem existir personagens nem coleccionáveis “dentro” de plata-
 formas ou alçapões, i.e. o bloco (na matriz do mapa) correspendente
@@ -56,7 +56,7 @@ validaInimigo (Personagem {ressalta=r}:xs) = r && validaInimigo xs
 
 posicaoI :: [Personagem] -> Mapa -> Bool
 posicaoI [] m = True
-posicaoI (Personagem {posicao = pf}:xs) m@(Mapa (pm,_) _ _) = pf==pm && posicaoI xs m
+posicaoI (Personagem {posicao = pf}:xs) m@(Mapa (pm,_) _ _) = pf/=pm && posicaoI xs m
 
 numI :: [Personagem] -> Bool    --numero de inimigos
 numI l = length l >=2 
@@ -66,29 +66,20 @@ iniVida [] = True
 iniVida (Personagem {tipo = MacacoMalvado}:xs) = iniVida xs
 iniVida (Personagem {tipo = fantasma, vida=v}:xs) = v==1 && iniVida xs
 
---eu vou acabar essa
---alcapaoL ::Mapa -> Personagem -> Bool
---alcapaoL (Mapa _ _ l) Personagem {tamanho=(x,y)} = filter Alcapao map group l 
 
-
-
-
-
-
+alcapaoL ::Mapa -> Personagem -> Bool
+alcapaoL (Mapa _ _ l) Personagem {tamanho=(x,y)}= notElem Alcapao (concat l) || all ((>= (ceiling x)) . length) (filter (elem Alcapao) (concat (map group l)))
+    --como os alcapoes têm tamanho 1x1, oq isto verifica é se o tamanho do mario cabe neles, ou seja, se o mario tiver tamanho 2x2, 
+    --é necessario haver 2 alcapoes seguidos sempre
 
 {-
 posb :: Mapa -> Bloco -> [[Int]] --calcula posicoes de um bloco, usa se achares util
 posb (Mapa _ _ l) b = map (elemIndices b) l
 
-fantasma = Personagem {tipo= Fantasma, tamanho= (1,1), ressalta = True, vida= 1, aplicaDano = (False,0)} -- tamanho dos fantasmas = tamanho mario = (1,1)?
-dk = Personagem {tipo= MacacoMalvado,tamanho= (2,2), ressalta = True, vida = 8, aplicaDano = (False,0)} --vida 8 pq há 8 alçapões, tamanho (2,2)?
-mario = Personagem {tipo = Jogador,tamanho= (1,1), ressalta = False, vida = 3}
--}
-
-{-
 chao :: Mapa -> Mapa
 chao (Mapa x y m) = Mapa x y (init m ++ [replicate (length (last m)) Plataforma]) --oq isto faz é subsituir a ultima linha da matriz do mapa por uma q tem apenas plataformas
--}
-{-exemplo de mapa
-Mapa ((0.5, 5.5), Oeste) (0.5, 2.5) [[P, P, P, P, P, P, P, P, P, P],[V, V, V, V, V, V, V, V, V, V],[V, V, V, V, V, V, V, V, V, V],[P, P, V, V, V, V, P, P, P, P],[V, V, V, V, V, V, V, V, E, V],[V, V, V, V, V, V, V, V, E, V],[P, P, P, P, P, P, P, P, P, P]]
+
+exemplo de mapa
+Mapa ((0.5, 5.5), Oeste) (0.5, 2.5) [[Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio],[Plataforma, Plataforma, Vazio, Vazio, Vazio, Vazio, Plataforma, Plataforma, Plataforma, Plataforma],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio],[Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma]]
+
 -}
