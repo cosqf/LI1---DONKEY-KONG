@@ -9,8 +9,9 @@ Módulo para a realização da Tarefa 3 de LI1 em 2023/24.
 module Tarefa3 where
 
 import LI12324
-import Tarefa1 
+import Tarefa1
 import Tarefa2
+import GHC.Generics (Par1)
 
 movimenta :: Semente -> Tempo -> Jogo -> Jogo
 movimenta = undefined
@@ -29,7 +30,7 @@ altura, deixa de ser representado no mapa. Note que um inimigo
 (enquanto Personagem) não é removido da lista de inimigos de um
 Jogo mesmo quando morre.
 
-3. Efeito de gravidade: qualquer personagem que não esteja sobre uma
+3. Efeito de gravidade: qualquer personagem que não esteja sobre uma               queda
 plataforma deverá “cair”. A velocidade da queda será dada no código
 pela variável gravidade.
 
@@ -51,14 +52,10 @@ estrela/martelo/moeda ocupam um bloco da matriz na totalidade.
 -}
 
 
-fantasmahit :: [Hitbox] -> Hitbox -> Personagem          --recebe lista de inimigos e a hitbox do martelo
-fantasmahit hitfant h 
-    |overlap h hitfant = fantasma {vida= v-1}        --se a hitbox tocar nas hitboxes do fantasma perde uma vida
-    |otherwise = fantasmahit hitfant h
-        where 
-            hitfant = map hitboxPersonagem fantasmas
-            fantasmas = [fantasma]       --n sei bem se está bem configurado
-            v= vida fantasma
+fantasmahit :: [Personagem] -> Hitbox -> Personagem          --recebe lista de inimigos e a hitbox do martelo
+fantasmahit (f@(Personagem {tipo=Fantasma, vida= v}):fs) h
+    |overlap h (hitboxPersonagem f) = f {vida= v-1}       --se a hitbox tocar nas hitboxes do fantasma perde uma vida
+    |otherwise= fantasmahit fs h
 
 
 hitboxMartelo :: Personagem -> Hitbox
@@ -69,7 +66,7 @@ hitboxMartelo mario@(Personagem {posicao = (x, y), direcao = d, aplicaDano = (Tr
             Este -> ((x-w/2+1, y-h/2), (x+w/2+1, y+h/2)) --forma hitbox à direita do mario
             Oeste -> ((x-w/2-1, y-h/2), (x+w/2-1, y+h/2)) --forma hitbox à esquerda do mario
 
-
+-- fantasmamorto n vai funcionar 
 fantasmamorto :: [Personagem] -> [Personagem] -- suposto usar na lista q contem os inimigos no mapa apenas
 fantasmamorto (x:xs)= if tipo x == Fantasma && vida x == 0  --verifica se é fantasma e se tem 0 vidas
                     then fantasmamorto xs --se sim, tira da lista
@@ -77,7 +74,8 @@ fantasmamorto (x:xs)= if tipo x == Fantasma && vida x == 0  --verifica se é fan
 
 fantasmamortopontos ::[Personagem] -> Personagem-> Personagem  -- recebe pontos por matar um fantasma, n está especificado q temos q fzr isto mas ?
 fantasmamortopontos (x:xs) mario@(Personagem{pontos = p})
-    |tipo x == Fantasma && vida x == 0 = mario {pontos= p+500} -- mais 500 pontos 
+    |tipo x == Fantasma && vida x == 0 = mario {pontos= p+500} -- mais 500 pontos
+    |otherwise= fantasmamortopontos xs mario
 
 
 jogadorhit ::[Personagem] -> Personagem -> Personagem --verifica se a colisao de personagens com o mario acontece
@@ -105,6 +103,27 @@ apanhacole (((Martelo,x):t)) mario@(Personagem {aplicaDano=(b,d)})
     |x == posicao mario = mario{aplicaDano =(True,10)} --se a posicao do mario for igual à do martelo, o mario recebe a condição de dar dano
     |otherwise = apanhacole t mario --atenção o tempo n está definido ainda, só na tarefa 4
 
+queda ::  [Personagem] -> Mapa -> Velocidade -> [Personagem]          -- velocidade fica igual à gravidade e a direção a sul
+queda [] _ _ = []
+queda (p:ps) mapa gravidade
+    |blocodirecao p Sul mapa == Vazio = update : queda ps mapa gravidade
+    |otherwise = p:queda ps mapa gravidade
+        where update = p {velocidade= gravidade, direcao = Sul}
 
 
+-- funções uteis (em teoria)
 
+blocodirecao :: Personagem -> Direcao -> Mapa -> Bloco     --indica o bloco posicionado no lado norte/sul/etc do personagem
+blocodirecao (Personagem {posicao= (x,y)}) Norte mapa = blocopos (x,y-1) mapa
+blocodirecao (Personagem {posicao= (x,y)}) Sul mapa = blocopos (x,y+1) mapa
+blocodirecao (Personagem {posicao= (x,y)}) Oeste mapa = blocopos (x-1,y) mapa
+blocodirecao (Personagem {posicao= (x,y)}) Este mapa = blocopos (x+1,y) mapa
+
+blocopos :: Posicao -> Mapa -> Bloco    -- indica o bloco na coordenada (x,y)
+blocopos (x, y) (Mapa _ _ mapa)
+    |y<0 || y>fromIntegral (length mapa)=Vazio      -- se estiver fora do mapa dá vazio
+    |x<0 || x>fromIntegral (length (head mapa))=Vazio
+    |x<1 && y<1 = (mapa !! floor y) !! floor x
+    |x<1 = (mapa !! floor (y-1)) !! floor x
+    |y<1 = (mapa !! floor y) !! floor (x-1)
+    | otherwise = (mapa !! floor (y-1)) !! floor (x-1)
