@@ -79,25 +79,39 @@ escadaValida matrizEscada (col, row) =
   in blocoInicial == Plataforma || blocoFinal == Plataforma
 
 
--- 8.Cria um Personagem
-criarPersonagem :: Velocidade -> Entidade -> Posicao -> Direcao -> (Double, Double) -> Int -> Int -> (Bool, Double) -> Maybe Personagem
-criarPersonagem vel ent pos dir tam vida pontos dano =
+--8.
+criarPersonagem :: Velocidade -> Entidade -> Posicao -> Direcao -> (Double, Double) -> Int -> Int -> (Bool, Double) -> [[Bloco]] -> Maybe Personagem
+criarPersonagem vel ent pos dir tam vida pontos dano matrizBlocos =
   let tamanhoX = fst tam
       tamanhoY = snd tam
       -- Verifica se o bloco na posição inicial do personagem é Vazio
-      blocoInicial = matrizBlocos !! round (snd pos) !! round (fst pos)
-  in if blocoInicial == Vazio
+      blocoInicial = getBlocoNaPosicao pos matrizBlocos
+  in if blocoInicial == Vazio &&
+        all (\(x, y) -> getBlocoNaPosicao (x, y) matrizBlocos == Vazio) (posicoesBlocoPersonagem pos tam)
        then Just (Personagem vel ent pos dir tam False False vida pontos dano)
        else Nothing
 
--- 8.Cria um Colecionavel
-criarColecionavel :: Colecionavel -> Posicao -> Maybe (Colecionavel, Posicao)
-criarColecionavel col pos =
+
+criarColecionavel :: Colecionavel -> Posicao -> [[Bloco]] -> Maybe (Colecionavel, Posicao)
+criarColecionavel col pos matrizBlocos =
   let -- Verifica se o bloco na posição inicial do colecionável é Vazio
-      blocoInicial = matrizBlocos !! round (snd pos) !! round (fst pos)
+      blocoInicial = getBlocoNaPosicao pos matrizBlocos
   in if blocoInicial == Vazio
        then Just (col, pos)
        else Nothing
+
+-- Função auxiliar para obter o bloco na posição dada na matriz
+getBlocoNaPosicao :: Posicao -> [[Bloco]] -> Bloco
+getBlocoNaPosicao (x, y) matrizBlocos =
+  if 0 <= round y && round y < length matrizBlocos &&
+     0 <= round x && round x < length (matrizBlocos !! round y)
+    then matrizBlocos !! round y !! round x
+    else Vazio
+
+-- Função auxiliar para obter as posições ocupadas por um bloco do tamanho dado
+posicoesBlocoPersonagem :: Posicao -> (Double, Double) -> [(Double, Double)]
+posicoesBlocoPersonagem (x, y) (tamanhoX, tamanhoY) =
+  [(x', y') | x' <- [x, x + tamanhoX - 1], y' <- [y, y + tamanhoY - 1]]
 
 
 {-
