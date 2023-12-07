@@ -71,9 +71,33 @@ iniVida (Personagem {tipo = fantasma, vida=v}:xs) = v==1 && iniVida xs
 --alcapaoL (Mapa _ _ l) Personagem {tamanho=(x,y)} = filter Alcapao map group l 
 
 
+-- 6.Função auxiliar para verificar se uma escada está válida
+escadaValida :: [[Bloco]] -> Posicao -> Bool
+escadaValida matrizEscada (col, row) =
+  let blocoInicial = matrizEscada !! round row !! round col
+      blocoFinal = matrizEscada !! (round row + 1) !! round col
+  in blocoInicial == Plataforma || blocoFinal == Plataforma
 
 
+-- 8.Cria um Personagem
+criarPersonagem :: Velocidade -> Entidade -> Posicao -> Direcao -> (Double, Double) -> Int -> Int -> (Bool, Double) -> Maybe Personagem
+criarPersonagem vel ent pos dir tam vida pontos dano =
+  let tamanhoX = fst tam
+      tamanhoY = snd tam
+      -- Verifica se o bloco na posição inicial do personagem é Vazio
+      blocoInicial = matrizBlocos !! round (snd pos) !! round (fst pos)
+  in if blocoInicial == Vazio
+       then Just (Personagem vel ent pos dir tam False False vida pontos dano)
+       else Nothing
 
+-- 8.Cria um Colecionavel
+criarColecionavel :: Colecionavel -> Posicao -> Maybe (Colecionavel, Posicao)
+criarColecionavel col pos =
+  let -- Verifica se o bloco na posição inicial do colecionável é Vazio
+      blocoInicial = matrizBlocos !! round (snd pos) !! round (fst pos)
+  in if blocoInicial == Vazio
+       then Just (col, pos)
+       else Nothing
 
 
 {-
