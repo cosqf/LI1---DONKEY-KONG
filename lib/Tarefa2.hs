@@ -67,10 +67,41 @@ iniVida (Personagem {tipo = MacacoMalvado}:xs) = iniVida xs
 iniVida (Personagem {tipo = fantasma, vida=v}:xs) = v==1 && iniVida xs
 
 
+-- 6.Função auxiliar para verificar se uma escada está válida
+escadaValida :: [[Bloco]] -> Posicao -> Bool
+escadaValida matrizEscada (col, row) =
+  let blocoInicial = matrizEscada !! round row !! round col
+      blocoFinal = matrizEscada !! (round row + 1) !! round col
+  in blocoInicial == Plataforma || blocoFinal == Plataforma
+
+
+-- 8.Cria um Personagem
+criarPersonagem :: Velocidade -> Entidade -> Posicao -> Direcao -> (Double, Double) -> Int -> Int -> (Bool, Double) -> Maybe Personagem
+criarPersonagem vel ent pos dir tam vida pontos dano =
+  let tamanhoX = fst tam
+      tamanhoY = snd tam
+      -- Verifica se o bloco na posição inicial do personagem é Vazio
+      blocoInicial = matrizBlocos !! round (snd pos) !! round (fst pos)
+  in if blocoInicial == Vazio
+       then Just (Personagem vel ent pos dir tam False False vida pontos dano)
+       else Nothing
+
+-- 8.Cria um Colecionavel
+criarColecionavel :: Colecionavel -> Posicao -> Maybe (Colecionavel, Posicao)
+criarColecionavel col pos =
+  let -- Verifica se o bloco na posição inicial do colecionável é Vazio
+      blocoInicial = matrizBlocos !! round (snd pos) !! round (fst pos)
+  in if blocoInicial == Vazio
+       then Just (col, pos)
+       else Nothing
+
 alcapaoL ::Mapa -> Personagem -> Bool
 alcapaoL (Mapa _ _ l) Personagem {tamanho=(x,y)}= notElem Alcapao (concat l) || all ((>= (ceiling x)) . length) (filter (elem Alcapao) (concat (map group l)))
     --como os alcapoes têm tamanho 1x1, oq isto verifica é se o tamanho do mario cabe neles, ou seja, se o mario tiver tamanho 2x2, 
-    --é necessario haver 2 alcapoes seguidos sempre
+
+
+
+
 
 {-
 posb :: Mapa -> Bloco -> [[Int]] --calcula posicoes de um bloco, usa se achares util
@@ -82,4 +113,7 @@ chao (Mapa x y m) = Mapa x y (init m ++ [replicate (length (last m)) Plataforma]
 exemplo de mapa
 Mapa ((0.5, 5.5), Oeste) (0.5, 2.5) [[Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio],[Plataforma, Plataforma, Vazio, Vazio, Vazio, Vazio, Plataforma, Plataforma, Plataforma, Plataforma],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio],[Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma]]
 
+-}
+{-exemplo de mapa
+Mapa ((0.5, 5.5), Oeste) (0.5, 2.5) [[P, P, P, P, P, P, P, P, P, P],[V, V, V, V, V, V, V, V, V, V],[V, V, V, V, V, V, V, V, V, V],[P, P, V, V, V, V, P, P, P, P],[V, V, V, V, V, V, V, V, E, V],[V, V, V, V, V, V, V, V, E, V],[P, P, P, P, P, P, P, P, P, P]]
 -}
