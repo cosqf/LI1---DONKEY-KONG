@@ -10,8 +10,6 @@ module Tarefa3 where
 
 import LI12324
 import Tarefa1
-import Tarefa2
-import GHC.Generics (Par1)
 
 movimenta :: Semente -> Tempo -> Jogo -> Jogo
 movimenta = undefined
@@ -47,7 +45,7 @@ não sofrerá qualquer alteração se for um inimigo a pisá-lo.
 
 7. Colisões: personagens não podem sair do mapa nem atravessar blo-
 cos de plataforma. Mais ainda, deve também assumir que a hitbox
-da estrela ou de um objecto coleccionável tem tamanho 1 × 1, i.e.
+da estrela ou de um objecto coleccionável tem tamanho 1 × 1, i.e.                colisao
 estrela/martelo/moeda ocupam um bloco da matriz na totalidade.
 -}
 
@@ -66,7 +64,7 @@ hitboxMartelo mario@(Personagem {posicao = (x, y), direcao = d, aplicaDano = (Tr
             Este -> ((x-w/2+1, y-h/2), (x+w/2+1, y+h/2)) --forma hitbox à direita do mario
             Oeste -> ((x-w/2-1, y-h/2), (x+w/2-1, y+h/2)) --forma hitbox à esquerda do mario
 
--- fantasmamorto n vai funcionar 
+
 fantasmamorto :: [Personagem] -> [Personagem] -- suposto usar na lista q contem os inimigos no mapa apenas
 fantasmamorto (x:xs)= if tipo x == Fantasma && vida x == 0  --verifica se é fantasma e se tem 0 vidas
                     then fantasmamorto xs --se sim, tira da lista
@@ -88,7 +86,7 @@ gameover :: Personagem -> Bool --recebe vida e dá true ou false
 gameover Personagem {vida=v} = v == 0 --e verifica se é 0. se sim, n tem mais vida
 
 
-tiracole :: [(Colecionavel, Posicao)] -> Personagem -> [(Colecionavel, Posicao)]
+tiracole :: [(Colecionavel, Posicao)] -> Personagem -> [(Colecionavel, Posicao)] 
 tiracole [] mario = []
 tiracole ((c,x):t) mario
     |x == posicao mario = tiracole t mario --remove do mapa os colecionaveis
@@ -111,7 +109,13 @@ queda (p:ps) mapa gravidade
         where update = p {velocidade= gravidade, direcao = Sul}
 
 
--- funções uteis (em teoria)
+colisao :: [Personagem] -> Mapa -> [Personagem]
+colisao (p@(Personagem {posicao = (x,y)}) :ps) mapa@(Mapa _ _ l)
+    |velocidade p /=(0,0) && direcao p == Este && blocodirecao p Este mapa == Plataforma || length (head l) == floor x = p {velocidade= (0,0)} : colisao ps mapa
+    |velocidade p /=(0,0) && direcao p == Oeste && blocodirecao p Oeste mapa == Plataforma || x== 0 = p {velocidade= (0,0)} : colisao ps mapa
+    |otherwise = colisao ps mapa
+    
+-- funções uteis 
 
 blocodirecao :: Personagem -> Direcao -> Mapa -> Bloco     --indica o bloco posicionado no lado norte/sul/etc do personagem
 blocodirecao (Personagem {posicao= (x,y)}) Norte mapa = blocopos (x,y-1) mapa

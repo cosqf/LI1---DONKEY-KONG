@@ -12,7 +12,8 @@ import LI12324
 import Data.List (elemIndices, group)
 
 valida :: Jogo -> Bool
-valida = undefined
+valida Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j } = 
+  chao m && validaJogador j && validaInimigo i && posicaoI i m && numI i && iniVida i && alcapaoL m j
 
 {-
 1. O mapa tem “chão”, i.e. uma plataforma que impede que o jogador            chao
@@ -39,8 +40,6 @@ formas ou alçapões, i.e. o bloco (na matriz do mapa) correspendente
 à posição de um personagem ou objecto tem que ser Vazio.
 -}
 
---exemplo
---mario = Personagem (5,5) Jogador (0,0) Este (1,1) False False 3 500 (False,0)
 
 chao :: Mapa -> Bool
 chao (Mapa _ _ m) = all (==Plataforma) (last m)
@@ -73,6 +72,7 @@ escadaValida matrizEscada (col, row) =
   let blocoInicial = matrizEscada !! round row !! round col
       blocoFinal = matrizEscada !! (round row + 1) !! round col
   in blocoInicial == Plataforma || blocoFinal == Plataforma
+
 
 
 -- 8.Cria um Personagem
