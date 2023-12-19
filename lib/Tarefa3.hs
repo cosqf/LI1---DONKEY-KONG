@@ -10,9 +10,12 @@ module Tarefa3 where
 
 import LI12324
 import Tarefa1
+import Data.List (elemIndices)
 
 movimenta :: Semente -> Tempo -> Jogo -> Jogo
 movimenta = undefined
+--movimenta = semente tempo jogo@$ Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j }
+
 
 
 {-
@@ -40,7 +43,7 @@ caso do martelo, este deve armar o jogador durante 10 (dez) segundos
 a contar do momento da sua recolha. No caso de uma moeda, esta            tiracole, apanhacole
 deve aumentar a pontuação do jogador.
 
-6. Um alçapão deverá desaparecer se o jogador o pisar. Por outro lado,
+6. Um alçapão deverá desaparecer se o jogador o pisar. Por outro lado,    
 não sofrerá qualquer alteração se for um inimigo a pisá-lo.
 
 7. Colisões: personagens não podem sair do mapa nem atravessar blo-
@@ -70,10 +73,10 @@ fantasmamorto (x:xs)= if tipo x == Fantasma && vida x == 0  --verifica se é fan
                     then fantasmamorto xs --se sim, tira da lista
                     else x: fantasmamorto xs --se n, mantem
 
-fantasmamortopontos ::[Personagem] -> Personagem-> Personagem  -- recebe pontos por matar um fantasma, n está especificado q temos q fzr isto mas ?
-fantasmamortopontos (x:xs) mario@(Personagem{pontos = p})
-    |tipo x == Fantasma && vida x == 0 = mario {pontos= p+500} -- mais 500 pontos
-    |otherwise= fantasmamortopontos xs mario
+fantasmamortopontos ::[Personagem] -> Hitbox -> Personagem-> Personagem  -- recebe pontos por matar um fantasma, n está especificado q temos q fzr isto mas ?
+fantasmamortopontos (f@(Personagem {tipo=Fantasma, vida= v}):fs) h mario@(Personagem{pontos = p})
+    |overlap h (hitboxPersonagem f)= mario {pontos= p+500} -- mais 500 pontos
+    |otherwise= fantasmamortopontos fs h mario
 
 
 jogadorhit ::[Personagem] -> Personagem -> Personagem --verifica se a colisao de personagens com o mario acontece
@@ -99,7 +102,13 @@ apanhacole (((Moeda,x):t)) mario@(Personagem {pontos = p}) --verifica se a posic
     |otherwise = apanhacole t mario -- se n continua a verificar 
 apanhacole (((Martelo,x):t)) mario@(Personagem {aplicaDano=(b,d)})
     |x == posicao mario = mario{aplicaDano =(True,10)} --se a posicao do mario for igual à do martelo, o mario recebe a condição de dar dano
-    |otherwise = apanhacole t mario --atenção o tempo n está definido ainda, só na tarefa 4
+    |otherwise = apanhacole t mario --atenção o tempo n está definido ainda
+
+removeMartelo :: Personagem -> Tempo -> Personagem --recebe o tempo e verifica se o tempo do martelo está a zero
+removeMartelo mario@(Personagem {aplicaDano = (False,0)}) t = mario
+removeMartelo mario@(Personagem {aplicaDano = (True , m)}) t
+    |t - m == t = mario {aplicaDano = (False, 0)}
+    |otherwise= mario {aplicaDano = (True, m-1)}
 
 queda ::  [Personagem] -> Mapa -> Velocidade -> [Personagem]          -- velocidade fica igual à gravidade e a direção a sul
 queda [] _ _ = []
@@ -107,6 +116,19 @@ queda (p:ps) mapa gravidade
     |blocodirecao p Sul mapa == Vazio = update : queda ps mapa gravidade
     |otherwise = p:queda ps mapa gravidade
         where update = p {velocidade= gravidade, direcao = Sul}
+
+removeAlcapao :: Personagem -> Mapa -> Mapa
+removeAlcapao mario@(Personagem {posicao= (x,y)}) mapa@(Mapa a1 a2 l)
+        | blocodirecao mario Sul mapa == Alcapao = Mapa a1 a2 (troca (x,y+1) Vazio mapa)
+        |elem (x,y-2) (posb mapa Alcapao) = Mapa a1 a2 (troca (x,y+2) Vazio mapa)
+    where
+        troca :: Posicao -> Bloco -> Mapa -> [[Bloco]]
+        troca (x,1) b (Mapa a1 a2 (h:t)) = auxTroca (x,1) b h : t
+        troca (x,y) b (Mapa a1 a2 l) = head l : troca (x,y-1) b (Mapa a1 a2 (tail l))
+            
+        auxTroca ::  Posicao -> Bloco -> [Bloco] -> [Bloco]
+        auxTroca (1,1) b h = b:tail h
+        auxTroca (x,1) b (h:t) = h: auxTroca (x-1,1) b t
 
 
 colisao :: [Personagem] -> Mapa -> [Personagem]
@@ -131,3 +153,11 @@ blocopos (x, y) (Mapa _ _ mapa)
     |x<1 = (mapa !! floor (y-1)) !! floor x
     |y<1 = (mapa !! floor y) !! floor (x-1)
     | otherwise = (mapa !! floor (y-1)) !! floor (x-1)
+
+posb :: Mapa -> Bloco -> [Posicao] --calcula todas as posicoes de um bloco
+posb (Mapa _ _ l) b = aux (map (elemIndices b) l) 1.0
+  where
+    aux :: [[Int]] -> Double -> [Posicao]
+    aux [] _ = []
+    aux ([]:c) x = aux c (x + 1)
+    aux ((a:b):c) x = (x, fromIntegral a) : aux (b:c) x

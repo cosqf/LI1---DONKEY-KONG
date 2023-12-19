@@ -9,7 +9,7 @@ Módulo para a realização da Tarefa 2 de LI1 em 2023/24.
 module Tarefa2 where
 
 import LI12324
-import Data.List (elemIndices, group)
+import Data.List (group)
 
 valida :: Jogo -> Bool
 valida Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j } = 
@@ -74,6 +74,7 @@ escadaValida matrizEscada (col, row) =
   in blocoInicial == Plataforma || blocoFinal == Plataforma
 
 
+
 --8.
 criarPersonagem :: Velocidade -> Entidade -> Posicao -> Direcao -> (Double, Double) -> Int -> Int -> (Bool, Double) -> [[Bloco]] -> Maybe Personagem
 criarPersonagem vel ent pos dir tam vida pontos dano matrizBlocos =
@@ -100,7 +101,6 @@ alcapaoL (Mapa _ _ l) Personagem {tamanho=(x,y)}= notElem Alcapao (concat l) || 
     --como os alcapoes têm tamanho 1x1, oq isto verifica é se o tamanho do mario cabe neles, ou seja, se o mario tiver tamanho 2x2, 
 
 
-
 -- Função auxiliar para obter o bloco na posição dada na matriz
 getBlocoNaPosicao :: Posicao -> [[Bloco]] -> Bloco
 getBlocoNaPosicao (x, y) matrizBlocos =
@@ -116,16 +116,13 @@ posicoesBlocoPersonagem (x, y) (tamanhoX, tamanhoY) =
 
 
 {-
-posb :: Mapa -> Bloco -> [[Int]] --calcula posicoes de um bloco, usa se achares util
-posb (Mapa _ _ l) b = map (elemIndices b) l
-
 chao :: Mapa -> Mapa
 chao (Mapa x y m) = Mapa x y (init m ++ [replicate (length (last m)) Plataforma]) --oq isto faz é subsituir a ultima linha da matriz do mapa por uma q tem apenas plataformas
 
 exemplo de mapa
 Mapa ((0.5, 5.5), Oeste) (0.5, 2.5) [[Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio],[Plataforma, Plataforma, Vazio, Vazio, Vazio, Vazio, Plataforma, Plataforma, Plataforma, Plataforma],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio],[Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma]]
 
--}
-{-exemplo de mapa
+
+exemplo de mapa
 Mapa ((0.5, 5.5), Oeste) (0.5, 2.5) [[P, P, P, P, P, P, P, P, P, P],[V, V, V, V, V, V, V, V, V, V],[V, V, V, V, V, V, V, V, V, V],[P, P, V, V, V, V, P, P, P, P],[V, V, V, V, V, V, V, V, E, V],[V, V, V, V, V, V, V, V, E, V],[P, P, P, P, P, P, P, P, P, P]]
 -}
