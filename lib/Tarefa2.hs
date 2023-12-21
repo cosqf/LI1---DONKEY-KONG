@@ -66,13 +66,40 @@ iniVida (Personagem {tipo = MacacoMalvado}:xs) = iniVida xs
 iniVida (Personagem {tipo = fantasma, vida=v}:xs) = v==1 && iniVida xs
 
 
--- 6.Função auxiliar para verificar se uma escada está válida
-escadaValida :: [[Bloco]] -> Posicao -> Bool
-escadaValida matrizEscada (col, row) =
-  let blocoInicial = matrizEscada !! round row !! round col
-      blocoFinal = matrizEscada !! (round row + 1) !! round col
-  in blocoInicial == Plataforma || blocoFinal == Plataforma
+--6.
 
+--verificar se uma posição é do tipo Plataforma
+ehPlataforma :: Bloco -> Bool
+ehPlataforma Plataforma = True
+ehPlataforma _          = False
+
+--verificar se uma posição é do tipo Alcapao
+ehAlcapao :: Bloco -> Bool
+ehAlcapao Alcapao = True
+ehAlcapao _       = False
+
+-- verificar se uma escada obedece às restrições
+escadaValida :: [[Bloco]] -> Bool
+escadaValida matriz = all verificaEscada todasEscadas
+  where
+    todasEscadas = concatMap (separarEscadas . filter (== Escada)) matriz
+
+    separarEscadas :: [Bloco] -> [[Bloco]]
+    separarEscadas [] = []
+    separarEscadas lista =
+      let (escada, resto) = span (== Escada) lista
+      in escada : separarEscadas (dropWhile (== Escada) resto)
+
+    verificaEscada escada =
+      case escada of
+        [] -> False
+        (s : resto) ->
+          (ehPlataforma s || ehPlataforma (last escada))
+          && not (ehAlcapao s || ehAlcapao (last escada))
+
+    -- Encontrar todas as escadas na matriz
+    escadas =
+      concatMap (filter (== Escada)) matriz
 
 
 --8.
@@ -113,6 +140,65 @@ getBlocoNaPosicao (x, y) matrizBlocos =
 posicoesBlocoPersonagem :: Posicao -> (Double, Double) -> [(Double, Double)]
 posicoesBlocoPersonagem (x, y) (tamanhoX, tamanhoY) =
   [(x', y') | x' <- [x, x + tamanhoX - 1], y' <- [y, y + tamanhoY - 1]]
+
+
+
+-- | Gera um mapa através da semente introduzida
+gerarMapaDonkeyKong :: Semente -> Int -> Int -> Mapa
+gerarMapaDonkeyKong s largura altura numPlataformas = do
+  let gen = mkStdGen s
+  let matrizVazia = replicate altura (replicate largura Vazio)
+
+  -- Gera as posições aleatórias para as plataformas
+  let posicoesPlataformas = nub $ take numPlataformas $ geraPosicoesAleatorias gen largura altura
+
+  -- Gera as posições aleatórias para as escadas (conectando plataformas na vertical)
+  let posicoesEscadas =
+        nub $
+          take (numPlataformas - 1) $
+            concatMap (\(x, y) -> [(x, y), (x, y + 1)]) posicoesPlataformas
+
+  -- Gera as posições aleatórias para os alçapões
+  let posicoesAlcapoes = take (numPlataformas `div` 2) $ geraPosicoesAleatorias gen largura altura
+
+  -- Gera as posições aleatórias para os colecionáveis (moedas e martelos)
+  let posicoesColecionaveis = take (numPlataformas * 2) $ geraPosicoesAleatorias gen largura altura
+
+  -- Gera as posições aleatórias para o jogador e a estrela
+  let posicaoJogador = head $ geraPosicoesAleatorias gen largura altura
+  let posicaoEstrela = last $ geraPosicoesAleatorias gen largura altura
+
+  -- Verifica se existe pelo menos um caminho para o jogador chegar à estrela
+  let caminhoExiste = existeCaminho matrizVazia posicaoJogador posicaoEstrela
+
+  -- Se não houver caminho, gera novamente as posições do jogador e da estrela
+  let (posicaoJogadorFinal, posicaoEstrelaFinal) =
+        if caminhoExiste
+          then (posicaoJogador, posicaoEstrela)
+          else (head $ geraPosicoesAleatorias gen largura altura, last $ geraPosicoesAleatorias gen largura altura)
+
+  -- Preenche a matriz com os elementos nas posições geradas
+  let matrizFinal =
+        foldl (\m (pos, elemento) -> atualizaMatriz m pos elemento) matrizVazia $
+          zip posicoesPlataformas (repeat Plataforma)
+            ++ zip posicoesEscadas (repeat Escada)
+            ++ zip posicoesAlcapoes (repeat Alcapao)
+            ++ zip posicoesColecionaveis (cycle [Moeda, Martelo])
+            ++ [(posicaoJogadorFinal, Jogador), (posicaoEstrelaFinal, Estrela)]
+
+  let mapaFinal = Mapa ((0, 0), Este) posicaoEstrelaFinal
+
+  -- Verifica se o mapa atende a todas as restrições
+  if chao mapaFinal
+        && validaJogador (jogador mapaFinal)
+        && validaInimigo (inimigos mapaFinal)
+        && posicaoI (inimigos mapaFinal) mapaFinal
+        && numI (inimigos mapaFinal)
+        && iniVida (inimigos mapaFinal)
+        && escadaValida matrizFinal
+        then mapaFinal
+        else gerarMapaDonkeyKong s largura altura numPlataformas
+
 
 
 {-
