@@ -37,11 +37,12 @@ marioMov (EventKey (SpecialKey KeyUp) Down _ _) mario@(Personagem {emEscada= b})
 marioMov (EventKey (SpecialKey KeyDown) Down _ _) mario@(Personagem {emEscada= b})
     |b = Just Descer
     |otherwise = Nothing
-marioMov (EventKey (SpecialKey KeyLeft) Down _ _) mario = Just AndarEsquerda
-marioMov (EventKey (SpecialKey KeyRight) Down _ _) mario= Just AndarDireita
-marioMov (EventKey (SpecialKey KeySpace) Up _ _) mario= Just Saltar
+marioMov (EventKey (SpecialKey KeyLeft) Down _ _) mario@(Personagem {emEscada= False}) = Just AndarEsquerda
+marioMov (EventKey (SpecialKey KeyRight) Down _ _) mario@(Personagem {emEscada= False})= Just AndarDireita
+marioMov (EventKey (SpecialKey KeySpace) Up _ _) mario@(Personagem {aplicaDano = (b,_)})
+    |b= Nothing
+    |otherwise= Just Saltar
 marioMov _ e = Just Parar
-
 
 fantMov :: [Personagem] -> [Maybe Acao] --movimento aleatorio, fzr mais inteligente dps
 fantMov [] = []
@@ -65,7 +66,6 @@ fantEscada f a mapa= func (zip f x)                     -- fazer mais inteligent
             |Escada == blocopos (posicao (head f)) mapa && even x = p {velocidade = (0,-10), emEscada = True} : func fs
             |Escada == blocodirecao p Sul mapa = p {velocidade = (0,0), emEscada = False} :func fs
             |Escada == blocopos (posicao (head f)) mapa = p {velocidade = (0,0), emEscada = False} :func fs
-
 
 movfantescadas :: [Personagem] -> [Maybe Acao]
 movfantescadas (p:ps)
