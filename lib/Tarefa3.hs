@@ -133,14 +133,20 @@ blocodirecao (Personagem {posicao= (x,y)}) Sul mapa = blocopos (x,y+1) mapa
 blocodirecao (Personagem {posicao= (x,y)}) Oeste mapa = blocopos (x-1,y) mapa
 blocodirecao (Personagem {posicao= (x,y)}) Este mapa = blocopos (x+1,y) mapa
 
+
 blocopos :: Posicao -> Mapa -> Bloco    -- indica o bloco na coordenada (x,y)
 blocopos (x, y) (Mapa _ _ mapa)
-    |y<0 || y>fromIntegral (length mapa)=Vazio      -- se estiver fora do mapa dá vazio
-    |x<0 || x>fromIntegral (length (head mapa))=Vazio
-    |x<1 && y<1 = (mapa !! floor y) !! floor x
-    |x<1 = (mapa !! floor (y-1)) !! floor x
-    |y<1 = (mapa !! floor y) !! floor (x-1)
+    |y<0 || y>fromIntegral maxy=Vazio      -- se estiver fora do mapa dá vazio
+    |x<0 || x>fromIntegral maxx=Vazio
+    |x<1 && y<1 = fun x y
+    |x<1 = fun x (y-1)
+    |y<1 = fun (x-1) y
     | otherwise = (mapa !! floor (y-1)) !! floor (x-1)
+        where
+            maxy = length mapa
+            maxx = length (head mapa)
+            fun x y = (mapa !! floor y) !! floor x
+        
 
 posb :: Mapa -> Bloco -> [Posicao] --calcula todas as posicoes de um bloco
 posb (Mapa _ _ l) b = aux (map (elemIndices b) l) 1.0
