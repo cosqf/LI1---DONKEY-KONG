@@ -4,101 +4,108 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
 import System.Directory.Internal.Prelude (exitFailure)
 
-data Estado = Estado --adicionar o resto
-  { modo :: Modo
-  }
 
-{-
-data Estado = Estado --adicionar o resto
-  { jogo :: Jogo,
-    imagens :: Imagens,
-    modo :: Modo
-  }
--}
-data Modo = EmJogo | MenuInicial MenuInicialOp | Pausa PausaOp
+-- Defina os tipos de dados e exporte-os
+data Estado = Estado { modo :: Modo }
   deriving (Show, Eq)
 
-data MenuInicialOp = Jogar | Sair 
+data Modo = MenuInicial | EmJogo Jogo1 | Mensagem MensagemOp
+  deriving (Show, Eq)
 
-data PausaOp = VoltaMenu | RetomaJogo deriving (Show,Eq)
+data MensagemOp = Vitoria | Derrota
+  deriving (Show, Eq)
 
-
-{-
-data CategoriaImagens = IBlocos | IPersonagem | IInimigos
-
-type ImagensBlocos = [(Tema, [(Bloco, Picture)])]
-type ImagensPersonagens = [(Tema, [(Entidade, Picture)])]
-
-
-type Imagens = Imagens {
-        blocos :: ImagensBlocos,
-        personagens :: ImagensPersonagens
-                       }
--}
--- menu texto
-
-opcaoJogar = Translate (-150) (100) $ Text "Jogar"
-
-opcaoSair = Translate (-150) (-100) $ Text "Sair"
-
-opcaoMenu = Translate (-150) (100) $ Text "Menu"
-
-opcaoRetomaJogo = Translate (-150) (100) $ Text "Jogar"
-
-desenha :: Estado -> IO Picture
-desenha e@Estado {modo = MenuInicial Jogar} =
-  return $ Pictures [Color blue opcaoJogar, opcaoSair]
-desenha e@Estado {modo = MenuInicial Sair} =
-  return $ Pictures [opcaoJogar, Color blue opcaoSair]
-desenha e@Estado {modo = Pausa RetomaJogo} =
-  return $ Pictures [Color blue opcaoRetomaJogo, opcaoSair]
-desenha e@Estado {modo = Pausa VoltaMenu} =
-  return $ Pictures [opcaoRetomaJogo, Color blue opcaoSair]
-
--- menu
-menureage :: Event -> Estado -> IO Estado
-menureage (EventKey (SpecialKey KeyEsc) Down _ _) e@Estado {modo = EmJogo} =
-  return e {modo = Pausa Retomajogo}
-menureage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = Pausa RetomaJogo} =
-  return e {modo = Pausa VoltaMenu}
-menureage (EventKey (SpecialKey KeyUp) Down _ _) e@Estado {modo = Pausa RVoltaMenu} =
-  return e {modo = Pausa RetomaJogo}
-menureage (EventKey (SpecialKey KeyEnter) Down _ _) e@Estado {modo = Pausa VoltaMenu} =
-  return e {modo = MenuInicial}
-menureage (EventKey (SpecialKey KeyEnter) Down _ _) e@Estado {modo = Pausa RetomaJogo} =
-  return e {modo = EmJogo}
-
-menureage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = MenuInicial Jogar} =
-  return e {modo = MenuInicial Sair}
-menureage (EventKey (SpecialKey KeyUp) Down _ _) e@Estado {modo = MenuInicial Sair} =
-  return e {modo = MenuInicial Jogar}
-menureage (EventKey (SpecialKey KeyEnter) Down _ _) e@Estado {modo = MenuInicial Jogar} =
-  return e {modo = EmJogo}
-menureage (EventKey (SpecialKey KeyEnter) Down _ _) e@Estado {modo = MenuInicial Sair} = exitFailure
-menureage _ e = return e
+data Jogo1 = Jogo1
+  -- Adicione campos necessários para o estado do jogo
+  deriving (Show, Eq)
 
 
+-- Constantes para a janela e a taxa de atualização
 janela :: Display
-janela = InWindow
-       "DK" 
-       (400, 400)   
-       (0,0) 
+janela = InWindow "Jogo" (800, 600) (0, 0)
 
-corFundo = Black 
-
-fr:: Int
+fr :: Int
 fr = 60
 
-tempo :: IO Estado
-
+-- Função principal
 main :: IO ()
-main = do
-  playIO 
-  janela corFundo fr (Estado {modo = MenuInicial Jogar}) desenha menureage --tempo
+main = playIO janela corFundo fr estadoInicial desenha reageEvento atualiza
 
-{-
-main :: IO ()
-main = do
-  playIO 
-  janela corFundo fr (Estado {jogo = jogoInicial, imagens = imgs, modo = MenuInicial Jogar}) desenha menureage --tempo
--}
+-- Estado inicial
+estadoInicial :: Estado
+estadoInicial = Estado MenuInicial
+
+-- Cor de fundo
+corFundo :: Color
+corFundo = black
+
+-- Função para desenhar o estado do jogo
+desenha :: Estado -> IO Picture
+desenha (Estado modo) = case modo of
+  MenuInicial -> desenhaMenu
+  EmJogo jogo -> desenhaJogo jogo
+  Mensagem op -> desenhaMensagem op
+
+-- Função para reagir aos eventos
+reageEvento :: Event -> Estado -> IO Estado
+reageEvento evento (Estado modo) = case modo of
+  MenuInicial -> reageMenu evento (Estado modo) -- Pass the current estado to reageMenu
+  EmJogo jogo -> reageJogo evento jogo
+  Mensagem op -> reageMensagem evento op
+
+-- Função para atualizar o estado do jogo
+atualiza :: Float -> Estado -> IO Estado
+atualiza _ estado = return estado
+
+-- Funções específicas para cada estado
+
+-- Menu Inicial
+desenhaMenu :: IO Picture
+desenhaMenu =
+  return $
+    Pictures
+      [ Translate (-150) 100 $ Color blue $ Text "Jogar",
+        Translate (-150) (-100)$ Color blue $ Text "Sair"
+      ]
+
+reageMenu :: Event -> Estado -> IO Estado
+reageMenu (EventKey (SpecialKey KeyDown) Down _ _) estado =
+  return (Estado MenuInicial)
+reageMenu (EventKey (SpecialKey KeyUp) Down _ _) estado =
+  return (Estado MenuInicial)
+reageMenu (EventKey (SpecialKey KeyEnter) Down _ _) estado =
+  return (Estado (EmJogo novoJogo))
+  where
+    novoJogo = Jogo1 -- Use o alias de tipo Jogo1
+reageMenu _ estado = return estado
+
+
+-- Jogo
+desenhaJogo :: Jogo1 -> IO Picture
+desenhaJogo jogo =
+  -- Adicione lógica para desenhar o jogo
+  return Blank
+
+reageJogo :: Event -> Jogo1 -> IO Estado
+reageJogo evento jogo =
+  -- Adicione lógica para reagir a eventos durante o jogo
+  return (Estado (EmJogo jogo))
+
+-- Mensagem
+desenhaMensagem :: MensagemOp -> IO Picture
+desenhaMensagem op =
+  return $
+    Pictures
+      [ Translate (-150) 100 $ Color blue $ mensagem,
+        Translate (-150) (-100) $ Text "Pressione Enter para retornar ao menu"
+      ]
+  where
+    mensagem = case op of
+      Vitoria -> Text "Parabéns! Você venceu!"
+      Derrota -> Text "Você perdeu. Tente novamente."
+
+reageMensagem :: Event -> MensagemOp -> IO Estado
+reageMensagem (EventKey (SpecialKey KeyEnter) Down _ _) _ =
+  return (Estado MenuInicial) -- Retorne ao menu após pressionar Enter
+reageMensagem _ estado = return (Estado (Mensagem estado)) -- Mantenha o estado atual se outros eventos ocorrerem
+
