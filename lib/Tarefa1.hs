@@ -14,8 +14,9 @@ import LI12324
 
 --  Calcula a hitbox de um 'Personagem'.
 hitboxPersonagem :: Personagem -> Hitbox
-hitboxPersonagem p = let (x, y) = posicao p
-                        (w, h) = tamanho p
+hitboxPersonagem p = let 
+                      (x, y) = posicao p
+                      (w, h) = tamanho p
                     in ((x - w/2, y - h/2), (x + w/2, y + h/2))
 
 
