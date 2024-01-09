@@ -74,7 +74,7 @@ fantEscada f mapa= func (zip f x)                     -- fazer mais inteligente 
             |Escada == blocodirecao p Sul mapa = p {velocidade = (0,0), emEscada = False} :func fs
             |Escada == blocopos (posicao (head f)) mapa = p {velocidade = (0,0), emEscada = False} :func fs
 
-movfantescadas :: [Personagem] -> [Maybe Acao]
+movfantescadas :: [Personagem] -> [Maybe Acao] 
 movfantescadas (p:ps)
     |velocidade p == (0,10) && emEscada p = Just Descer : movfantescadas ps
     |velocidade p == (0,-10) && emEscada p = Just Subir : movfantescadas ps
@@ -83,6 +83,7 @@ movfantescadas (p:ps)
 fantescadas :: [Personagem] -> Mapa -> [Maybe Acao]
 fantescadas p mapa = movfantescadas (fantEscada p mapa)
 
+-- adicionar função para decidir oq os fantasmas fazem dps de descer/subir a escada?
 
 movimentos :: [Maybe Acao] -> [Personagem] -> [Personagem] -- definição dos movimentos andar, subir etc
 movimentos [] [] = []

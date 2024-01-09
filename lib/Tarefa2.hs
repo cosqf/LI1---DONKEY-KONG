@@ -7,16 +7,19 @@ Copyright   : Ivo Filipe Mendes Vieira <a103999@alunos.uminho.pt>
 Módulo para a realização da Tarefa 2 de LI1 em 2023/24.
 -}
 module Tarefa2 where
-import Tarefa3
+import Tarefa1 (colisoesPersonagens)
+import Tarefa3 (blocopos)
 import LI12324
 import Data.List (group)
 
 {- | A função principal que verifica se o jogo é válido. Se tal não se verificar, o jogo crasha. 
 Todas as funções que veremos de seguida são usadas por esta função.
 -}
+
 valida :: Jogo -> Bool
 valida Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j } = 
-  chao m && validaJogador j && validaInimigo i && posicaoI i m && numI i && iniVida i && alcapaoL m j && escadaValida m && checkmario j m  && checkcolec c m
+  chao m && validaJogador j && validaInimigo i && posicaoI i j m && numI i && iniVida i && alcapaoL m j && escadaValida m && checkmario j m  && checkcolec c m
+
 
 -- | Verifica se a última linha da matriz que estabelece o mapa é constituida apenas por plataformas.
 chao :: Mapa -> Bool
@@ -31,9 +34,9 @@ validaInimigo :: [Personagem] -> Bool
 validaInimigo = all ressalta
 
 -- | Verifica se a posição inicial do jogador coincide com alguma dos inimigos.
-posicaoI :: [Personagem] -> Mapa -> Bool
-posicaoI [] m = True
-posicaoI (Personagem {posicao = pf}:xs) m@(Mapa (pm,_) _ _) = pf/=pm && posicaoI xs m
+posicaoI :: [Personagem] -> Personagem -> Mapa -> Bool
+posicaoI [] _ _ = True
+posicaoI (f:xs) mario m@(Mapa (pm,_) _ _) = not (colisoesPersonagens f mario {posicao= pm}) && posicaoI xs mario m
 
 -- | Verifica se o número de inimigos é pelo menos 2.
 numI :: [Personagem] -> Bool    --numero de inimigos
@@ -98,6 +101,12 @@ checkcolec :: [(Colecionavel, Posicao)] -> Mapa -> Bool
 checkcolec l mapa = notElem Plataforma pos &&  notElem Alcapao pos
   where pos = map (\(c, p) -> blocopos p mapa) l
 
+-- | Verifica se o jogador consegue cair num alçapão, tendo em conta o seu tamanho.
+
+alcapaoL ::Mapa -> Personagem -> Bool
+alcapaoL (Mapa _ _ l) Personagem {tamanho=(x,y)}= notElem Alcapao (concat l) || all ((>= (ceiling x)) . length) (filter (elem Alcapao) (concat (map group l)))
+    --como os alcapoes têm tamanho 1x1, oq isto verifica é se o tamanho do mario cabe neles, ou seja, se o mario tiver tamanho 2x2, 
+
 
 criarPersonagem :: Velocidade -> Entidade -> Posicao -> Direcao -> (Double, Double) -> Int -> Int -> (Bool, Double) -> [[Bloco]] -> Maybe Personagem
 criarPersonagem vel ent pos dir tam vida pontos dano matrizBlocos =
@@ -119,9 +128,6 @@ criarColecionavel col pos matrizBlocos =
        then Just (col, pos)
        else Nothing
 
-alcapaoL ::Mapa -> Personagem -> Bool
-alcapaoL (Mapa _ _ l) Personagem {tamanho=(x,y)}= notElem Alcapao (concat l) || all ((>= (ceiling x)) . length) (filter (elem Alcapao) (concat (map group l)))
-    --como os alcapoes têm tamanho 1x1, oq isto verifica é se o tamanho do mario cabe neles, ou seja, se o mario tiver tamanho 2x2, 
 
 
 -- Gera um mapa através da semente introduzida

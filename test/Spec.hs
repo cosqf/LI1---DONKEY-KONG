@@ -2,8 +2,11 @@ module Main where
 
 import Test.HUnit
 import Tarefa1TestSpec
+import Tarefa2TestSpec
+import Tarefa3TestSpec
+import Tarefa4TestSpec
 
-test1 = [test_hitboxPersonagem,test_colisoesParede, test_safeGet, test_colisoesPersonagens, test_overlap]
 
 main :: IO ()
-main = runTestTTAndExit $ test [test1]
+main = runTestTTAndExit $ test [testesTarefa1, testesTarefa2, testesTarefa3, testesTarefa4]
+
