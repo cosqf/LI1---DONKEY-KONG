@@ -9,43 +9,23 @@ Módulo para a realização da Tarefa 4 de LI1 em 2023/24.
 module Tarefa4 where
 
 import Data.Maybe
-import Graphics.Gloss
-import Graphics.Gloss.Interface.Pure.Game
 import LI12324
-import Tarefa3
+import Tarefa3 (blocodirecao, blocopos)
+
 
 atualiza :: [Maybe Acao] -> Maybe Acao -> Jogo -> Jogo
-atualiza = undefined
-
-
-marioMov :: Event -> Jogo -> Maybe Acao
-marioMov (EventKey (SpecialKey KeyUp) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = True}  -> Just Subir
-    _                             -> Nothing
-marioMov (EventKey (SpecialKey KeyDown) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = True}  -> Just Descer
-    _                             -> Nothing
-marioMov (EventKey (SpecialKey KeyLeft) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = False} -> Just AndarEsquerda
-    _                             -> Nothing
-marioMov (EventKey (SpecialKey KeyRight) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = False} -> Just AndarDireita
-    _                             -> Nothing
-marioMov (EventKey (SpecialKey KeySpace) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = False, aplicaDano = (False, _)} -> Just Saltar
-    _                                                      -> Nothing
-marioMov _ _ = Just Parar
-
+atualiza listamov jogadormov Jogo {mapa= m, inimigos= i, colecionaveis= c, jogador= j} = 
+    Jogo
+    { mapa = m,
+    inimigos = movimentos (allFantMov i m) i,
+    colecionaveis = c,
+    jogador = movimentosM jogadormov j
+    }
 
 allFantMov :: [Personagem] -> Mapa -> [Maybe Acao]   -- combina todas as funções de movimento relacionadas com os fantasmas
 allFantMov [] _ = []
 allFantMov p  m=
-  case (head (fantescadas p m), head (fantMov p)) of
+  case (head (fantescadas p m), head (fantMov p)) of -- fantescada toma prioridade
     (Just a, _)        -> Just a : allFantMov (tail p) m
     (Nothing , Just a) -> Just a : allFantMov (tail p) m
     _                  -> Nothing : allFantMov (tail p) m
@@ -69,10 +49,12 @@ fantEscada f mapa= func (zip f x)                     -- fazer mais inteligente 
         func :: [(Personagem, Int)] -> [Personagem]
         func [] = []
         func ((p,x):fs)
+            |emEscada p && ( velocidade p == (0,10) || velocidade p == (0,-10)) = p :func fs
             |Escada == blocodirecao p Sul mapa && even x = p {velocidade = (0,10), emEscada = True} : func fs
-            |Escada == blocopos (posicao (head f)) mapa && even x = p {velocidade = (0,-10), emEscada = True} : func fs
+            |Escada == blocopos (posicao p) mapa && even x = p {velocidade = (0,-10), emEscada = True} : func fs
             |Escada == blocodirecao p Sul mapa = p {velocidade = (0,0), emEscada = False} :func fs
-            |Escada == blocopos (posicao (head f)) mapa = p {velocidade = (0,0), emEscada = False} :func fs
+            |Escada == blocopos (posicao p) mapa = p {velocidade = (0,0), emEscada = False} :func fs
+            |otherwise= p: func fs
 
 movfantescadas :: [Personagem] -> [Maybe Acao] 
 movfantescadas (p:ps)
@@ -85,6 +67,20 @@ fantescadas p mapa = movfantescadas (fantEscada p mapa)
 
 -- adicionar função para decidir oq os fantasmas fazem dps de descer/subir a escada?
 
+
+movimentosM :: Maybe Acao -> Personagem -> Personagem -- definição dos movimentos andar, subir etc
+movimentosM (Just AndarDireita) p@(Personagem {velocidade= (vx,vy)}) = 
+    p {velocidade = (10,vy), direcao= Este}
+movimentosM (Just AndarEsquerda) p@(Personagem {velocidade= (vx,vy)}) = 
+    p {velocidade = (-10,vy), direcao= Oeste}
+movimentosM (Just Subir) (p) = p {velocidade = (0,-10), direcao= Norte}
+movimentosM (Just Descer) (p) = p {velocidade = (0,10), direcao= Sul}
+movimentosM (Just Parar) (p) = p {velocidade = (0,0)} 
+movimentosM (Just Saltar) p@(Personagem {velocidade= (vx,vy)}) = 
+    p {velocidade = (vx, -10)} 
+
+
+
 movimentos :: [Maybe Acao] -> [Personagem] -> [Personagem] -- definição dos movimentos andar, subir etc
 movimentos [] [] = []
 movimentos (Just AndarDireita: ms) (p@(Personagem {velocidade= (vx,vy)}):ps) = 
@@ -96,12 +92,8 @@ movimentos (Just Descer: ms) (p:ps) = p {velocidade = (0,10), direcao= Sul} :mov
 movimentos (Just Parar: ms) (p:ps) = p {velocidade = (0,0)} : movimentos ms ps
 movimentos (Just Saltar: ms) (p@(Personagem {velocidade= (vx,vy)}):ps) = 
     p {velocidade = (vx, -10)} : movimentos ms ps
+movimentos (Nothing:ms) (p:ps) = p : movimentos ms ps 
 
-
-velocidades :: [Personagem] -> [Personagem] -- relacionar a velocidade com a posicao
-velocidades [] = [] 
-velocidades (p@Personagem{velocidade=(vx,vy), posicao=(x,y)}:ps) = 
-    p { posicao = (x + (vx / 10), y + (vy / 10)) } : velocidades ps
 
 
 

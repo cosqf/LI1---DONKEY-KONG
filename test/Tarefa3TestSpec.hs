@@ -40,7 +40,9 @@ j3 = Jogo gameMap1 [] [c1] pl2
 
 j4 = Jogo gameMap1 [] [] (pl2 {aplicaDano = (True, 10.0)})
 
-teste2 = "T2: Jogador apanha martelo." ~: j4 ~=? movimenta 100 1.0 j3
+teste2A = "T2A: Jogador apanha martelo e a flag fica True." ~: True ~=? (fst . aplicaDano . jogador $ movimenta 100 1.0 j3) 
+
+teste2B = "T2B: Jogador apanha martelo e o tempo restante é maior que zero." ~: True ~=? (snd . aplicaDano . jogador $ movimenta 100 1.0 j3) > 0
 
 pl3 = Personagem (0.0,0.0) Jogador (3.5,4) Oeste (0.8,0.8) True False 10 0 (False, 0.0)
 
@@ -87,4 +89,4 @@ j9 = Jogo gameMap1 [] [c2] pl6
 
 teste6 = "T6: Jogador apanha uma moeda" ~: True ~=? (pontos . jogador $ movimenta 100 1.0 j9) > (pontos . jogador $ j9)
 
-testesTarefa3 = test [teste1, teste2, teste3, teste4, teste5, teste6]
+testesTarefa3 = test [teste1, teste2A, teste2B, teste3, teste4, teste5, teste6]

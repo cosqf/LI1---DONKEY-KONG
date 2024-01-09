@@ -2,7 +2,6 @@ module Main where
   
 import LI12324
 import Graphics.Gloss
-import Graphics.Gloss.Interface.Pure.Game
 import Graphics.Gloss.Interface.IO.Game
 
 data Estado = Estado --adicionar o resto

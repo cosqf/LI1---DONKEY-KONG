@@ -15,8 +15,8 @@ import Data.List (elemIndices)
 movimenta :: Semente -> Tempo -> Jogo -> Jogo
 movimenta semente tempo Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j } =
     let
-        iniatualizado = flip fantasmahit j . multf (flip colisao m) . multf (queda m (0,10))  $ i
-        marioatualizado = fantasmamortopontos i . jogadorhit i . flip removeMartelo  tempo. queda m (0,10) . flip colisao m . apanhacole c . flip removeMartelo tempo $ j
+        iniatualizado = multf velocidades. flip fantasmahit j . multf (flip colisao m) . multf (queda m (0,10))  $ i
+        marioatualizado = velocidades. fantasmamortopontos i . jogadorhit i . flip removeMartelo  tempo. queda m (0,10) . flip colisao m . apanhacole c . flip removeMartelo tempo $ j
         colecatualizado = tiracole c j
         mapaatualizado = removeAlcapao j m
     in
@@ -119,6 +119,14 @@ colisao p m
     |colisoesParede m p =  p{velocidade=(0,0)}
     |otherwise = p
 
+velocidades :: Personagem -> Personagem -- relacionar a velocidade com a posicao
+velocidades p@Personagem{velocidade=(0,0), posicao=(x,y)} = p
+velocidades p@Personagem{velocidade=(vx, 0), posicao=(x,y)} = 
+    p { posicao = (x + (vx / 10), y), velocidade = (0,0)}
+velocidades p@Personagem{velocidade=(0,vy), posicao=(x,y)} = 
+    p { posicao = (x, y + (vy / 10)), velocidade = (0,0)}
+velocidades p@Personagem{velocidade=(vx,vy), posicao=(x,y)} = 
+    p { posicao = (x + (vx / 10), y + (vy / 10)), velocidade = (0,0)}
 
 
 {-
