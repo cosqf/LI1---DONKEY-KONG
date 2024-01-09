@@ -9,7 +9,8 @@ Módulo para a realização da Tarefa 2 de LI1 em 2023/24.
 module Tarefa2 where
 import Tarefa3
 import LI12324
-import Data.List (group)
+import Data.List
+import System.Random 
 
 {- | A função principal que verifica se o jogo é válido. Se tal não se verificar, o jogo crasha. 
 Todas as funções que veremos de seguida são usadas por esta função.
@@ -124,64 +125,6 @@ alcapaoL (Mapa _ _ l) Personagem {tamanho=(x,y)}= notElem Alcapao (concat l) || 
     --como os alcapoes têm tamanho 1x1, oq isto verifica é se o tamanho do mario cabe neles, ou seja, se o mario tiver tamanho 2x2, 
 
 
--- Gera um mapa através da semente introduzida
-{-
-gerarMapaDonkeyKong :: Semente -> Int -> Int -> Mapa
-gerarMapaDonkeyKong s largura altura numPlataformas = do
-  let gen = mkStdGen s
-  let matrizVazia = replicate altura (replicate largura Vazio)
-
-  -- Gera as posições aleatórias para as plataformas
-  let posicoesPlataformas = nub $ take numPlataformas $ geraPosicoesAleatorias gen largura altura
-
-  -- Gera as posições aleatórias para as escadas (conectando plataformas na vertical)
-  let posicoesEscadas =
-        nub $
-          take (numPlataformas - 1) $
-            concatMap (\(x, y) -> [(x, y), (x, y + 1)]) posicoesPlataformas
-
-  -- Gera as posições aleatórias para os alçapões
-  let posicoesAlcapoes = take (numPlataformas `div` 2) $ geraPosicoesAleatorias gen largura altura
-
-  -- Gera as posições aleatórias para os colecionáveis (moedas e martelos)
-  let posicoesColecionaveis = take (numPlataformas * 2) $ geraPosicoesAleatorias gen largura altura
-
-  -- Gera as posições aleatórias para o jogador e a estrela
-  let posicaoJogador = head $ geraPosicoesAleatorias gen largura altura
-  let posicaoEstrela = last $ geraPosicoesAleatorias gen largura altura
-
-  -- Verifica se existe pelo menos um caminho para o jogador chegar à estrela
-  let caminhoExiste = existeCaminho matrizVazia posicaoJogador posicaoEstrela
-
-  -- Se não houver caminho, gera novamente as posições do jogador e da estrela
-  let (posicaoJogadorFinal, posicaoEstrelaFinal) =
-        if caminhoExiste
-          then (posicaoJogador, posicaoEstrela)
-          else (head $ geraPosicoesAleatorias gen largura altura, last $ geraPosicoesAleatorias gen largura altura)
-
-  -- Preenche a matriz com os elementos nas posições geradas
-  let matrizFinal =
-        foldl (\m (pos, elemento) -> atualizaMatriz m pos elemento) matrizVazia $
-          zip posicoesPlataformas (repeat Plataforma)
-            ++ zip posicoesEscadas (repeat Escada)
-            ++ zip posicoesAlcapoes (repeat Alcapao)
-            ++ zip posicoesColecionaveis (cycle [Moeda, Martelo])
-            ++ [(posicaoJogadorFinal, Jogador), (posicaoEstrelaFinal, Estrela)]
-
-  let mapaFinal = Mapa ((0, 0), Este) posicaoEstrelaFinal
-
-  -- Verifica se o mapa atende a todas as restrições
-  if chao mapaFinal
-        && validaJogador (jogador mapaFinal)
-        && validaInimigo (inimigos mapaFinal)
-        && posicaoI (inimigos mapaFinal) mapaFinal
-        && numI (inimigos mapaFinal)
-        && iniVida (inimigos mapaFinal)
-        && escadaValida matrizFinal
-        then mapaFinal
-        else gerarMapaDonkeyKong s largura altura numPlataformas
--}
-
 
 -- Função auxiliar para obter o bloco na posição dada na matriz
 getBlocoNaPosicao :: Posicao -> [[Bloco]] -> Bloco
@@ -197,6 +140,47 @@ posicoesBlocoPersonagem (x, y) (tamanhoX, tamanhoY) =
   [(x', y') | x' <- [x, x + tamanhoX - 1], y' <- [y, y + tamanhoY - 1]]
 
 
+
+blocos1 = [ [ Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio]
+          , [ Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio]
+          , [ Vazio, Vazio, Vazio, Plataforma, Plataforma, Plataforma, Plataforma, Vazio, Vazio, Vazio]
+          , [ Vazio, Vazio, Vazio, Escada, Vazio, Vazio, Escada, Vazio, Vazio, Vazio]
+          , [ Vazio, Vazio, Vazio, Escada, Vazio, Vazio, Escada, Vazio, Vazio, Vazio]
+          , [ Vazio, Vazio, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Vazio, Vazio]
+          , [ Vazio, Vazio, Escada, Vazio, Vazio, Vazio, Vazio, Escada, Vazio, Vazio]
+          , [ Vazio, Vazio, Escada, Vazio, Vazio, Vazio, Vazio, Escada, Vazio, Vazio]
+          , [ Vazio, Plataforma, Plataforma, Plataforma, Alcapao, Plataforma, Plataforma, Plataforma, Plataforma, Vazio]
+          , [ Vazio, Escada, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio]
+          , [ Vazio, Escada, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio]
+          , [ Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma]]
+
+
+-- Função para gerar um mapa aleatório com mais plataformas
+geraMapaAleatorio :: Semente -> [[Bloco]]
+geraMapaAleatorio s = shuffleBlocos s blocos1
+
+-- Função para embaralhar os blocos, mantendo algumas plataformas fixas
+shuffleBlocos :: Semente -> [[Bloco]] -> [[Bloco]]
+shuffleBlocos s blocos =
+  let blocoFixo = Escada  -- Escolha um bloco fixo (por exemplo, Plataforma)
+      matrizFixa = replicate 1 (replicate 10 blocoFixo)  -- Mantenha duas linhas fixas de plataformas (ajuste conforme necessário)
+      (blocosRestantes, _) = shuffle (mkStdGen s) $ concat $ filter (\row -> head row /= blocoFixo) blocos  -- Pegue os blocos que não são fixos
+      matrizEmbaralhada = matrizFixa ++ chunkList (length (head blocos)) blocosRestantes
+  in matrizEmbaralhada
+
+
+--Função para embaralhar uma lista com base em uma semente
+shuffle :: RandomGen g => g -> [a] -> ([a], g)
+shuffle gen [] = ([], gen)
+shuffle gen xs =
+  let (idx, gen') = randomR (0, length xs - 1) gen
+      (ys, z:zs) = splitAt idx xs
+  in (z : ys ++ zs, gen')
+               
+-- Função para dividir uma lista em sub-listas de tamanho específico
+chunkList :: Int -> [a] -> [[a]]
+chunkList _ [] = []
+chunkList n xs = take n xs : chunkList n (drop n xs)
 
 
 {-

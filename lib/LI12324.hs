@@ -20,14 +20,14 @@ module LI12324 (
     gravidade, geraAleatorios
     ) where
 
-import System.Random (mkStdGen, randoms)
+import System.Random (mkStdGen, randoms, randomRIO )
 
 -- | Peças possíveis para construir um 'Mapa'.
 data Bloco
   = Escada       -- ^ Permite ao jogador mover-se verticalmente
   | Plataforma   -- ^ Bloco sólido que pode ser utilizado como superfície
   | Alcapao      -- ^ Bloco que desaparece após ser atravessado pelo jogador
-  | Vazio        -- ^ Espaço
+  | Vazio   
   deriving (Ord, Eq, Read, Show)
 
 -- | Mapa de um 'Jogo', composto por uma posição e direção inicial, posição final e uma matriz de blocos.
@@ -126,3 +126,4 @@ type Semente = Int
 -}
 geraAleatorios :: Semente -> Int -> [Int]
 geraAleatorios s c = take c $ randoms (mkStdGen s)
+
