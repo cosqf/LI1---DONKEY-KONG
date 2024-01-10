@@ -14,11 +14,11 @@ data Estado = Estado --adicionar o resto
 
 
 
-data Modo = EmJogo Jogo1 | MenuInicial MenuInicialOp | Pausa PausaOp | Mensagem MensagemOp
+data Modo = EmJogo | MenuInicial MenuInicialOp | Pausa PausaOp | Mensagem MensagemOp | OpcoesOp
 
-data Jogo1 = Jogo1 deriving (Show, Eq)
+data MenuInicialOp = Jogar | Sair | Opcoes
 
-data MenuInicialOp = Jogar | Sair
+data OpcoesOp = Skins -- mais alguma coisa?
 
 data PausaOp = VoltaMenu | RetomaJogo deriving (Show,Eq)
 
@@ -33,23 +33,20 @@ desenha :: Estado -> IO Picture
 desenha estado@Estado {modo= modo} = case modo of
   MenuInicial op -> desenhaMenu estado
   Pausa op -> desenhaMenu estado
-  EmJogo op -> desenhaJogo estado
+  EmJogo -> desenhaJogo estado
   Mensagem op -> desenhaMensagem op
 
 desenhaMenu :: Estado -> IO Picture
-desenhaMenu e@Estado {modo = MenuInicial Jogar} =
-  return $ Pictures [Color blue opcaoJogar, Color white opcaoSair]
-desenhaMenu e@Estado {modo = MenuInicial Sair} =
-  return $ Pictures [Color white opcaoJogar, Color blue opcaoSair]
-desenhaMenu e@Estado {modo = Pausa RetomaJogo} =
+desenhaMenu Estado {modo = MenuInicial Jogar} = menujogar
+desenhaMenu Estado {modo = MenuInicial Sair} = menusair
+desenhaMenu Estado {modo = MenuInicial Opcoes} = menuopcoes
+desenhaMenu Estado {modo = Pausa RetomaJogo} =
   return $ Pictures [Color blue opcaoRetomaJogo, Color white opcaoSair]
-desenhaMenu e@Estado {modo = Pausa VoltaMenu} =
+desenhaMenu Estado {modo = Pausa VoltaMenu} =
   return $ Pictures [Color white opcaoRetomaJogo, Color blue opcaoSair]
 desenhaMenu _ = return $ Pictures []
 
-opcaoJogar = Translate (-150) (100) $ Text "Jogar"
 opcaoSair = Translate (-150) (-100) $ Text "Sair"
-opcaoMenu = Translate (-150) (100) $ Text "Menu"
 opcaoRetomaJogo = Translate (-150) (100) $ Text "Jogar"
 
 
@@ -68,39 +65,39 @@ desenhaMensagem op =
 
 
 desenhaJogador:: Estado -> IO Picture
-desenhaJogador Estado {modo= EmJogo Jogo1, tempo= t, jogo= Jogo {jogador=
+desenhaJogador Estado {modo= EmJogo, tempo= t, jogo= Jogo {jogador=
   Personagem {velocidade= (0,0), tipo= Jogador, posicao = pos, direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (False, d)}}} =
-    transPos pos . turnEste dir . tamanhoscale tam $ marioparado
-desenhaJogador Estado {modo= EmJogo Jogo1, tempo= t, jogo= Jogo {jogador=
+    translateParaPos pos . turnEste dir . tamanhoscale tam $ marioparado
+desenhaJogador Estado {modo= EmJogo, tempo= t, jogo= Jogo {jogador=
   Personagem {velocidade= (0,0), tipo= Jogador, posicao = pos, direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (True, d)}}}=
-    transPos pos . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+    translateParaPos pos . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
                                                                                            mariomarteloup
                                                                                            else mariomartelodown
-desenhaJogador Estado {modo= EmJogo Jogo1, tempo= t, jogo= Jogo {jogador=
+desenhaJogador Estado {modo= EmJogo, tempo= t, jogo= Jogo {jogador=
   Personagem {velocidade= vel, tipo= Jogador, posicao = pos, direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (False, d)}}} =
-    transPos pos . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+    translateParaPos pos . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
                                                                                             marioanda1
                                                                                             else marioanda2
-desenhaJogador Estado {modo= EmJogo Jogo1, tempo= t, jogo= Jogo {jogador=
+desenhaJogador Estado {modo= EmJogo, tempo= t, jogo= Jogo {jogador=
   Personagem {velocidade= vel, tipo= Jogador, posicao = pos, direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (True, d)}}} =
-    transPos pos . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+    translateParaPos pos . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
                                                                                             mariomarteloupanda
                                                                                             else mariomarteloandadown
-desenhaJogador Estado {modo= EmJogo Jogo1, tempo= t, jogo= Jogo {jogador=
+desenhaJogador Estado {modo= EmJogo, tempo= t, jogo= Jogo {jogador=
   Personagem {velocidade= vx, tipo= Jogador, posicao = pos, direcao=dir, tamanho= tam, emEscada= True, ressalta= False, vida= v, pontos= p, aplicaDano= (False, d)}}} =
-    transPos pos . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+    translateParaPos pos . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
                                                                               mariosubir
                                                                               else turnEste Este marioanda2
 -- falta morte
 
 desenhaColec :: Estado -> IO [Picture] --mapM converte a função de [IO Picture] para IO [Picture]
-desenhaColec Estado {modo = EmJogo Jogo1, jogo = Jogo {colecionaveis = l}} = mapM (\(c, pos) -> case c of 
-                                                                                Martelo -> transPos pos martelo
-                                                                                Moeda   -> transPos pos coin) l
+desenhaColec Estado {modo = EmJogo, jogo = Jogo {colecionaveis = l}} = mapM (\(c, pos) -> case c of 
+                                                                                Martelo -> translateParaPos pos martelo
+                                                                                Moeda   -> translateParaPos pos coin) l
 
 
 desenhaFantasmas :: Estado -> IO [Picture]
-desenhaFantasmas Estado {modo = EmJogo Jogo1, jogo = Jogo {inimigos = l}} =
+desenhaFantasmas Estado {modo = EmJogo, jogo = Jogo {inimigos = l}} =
   mapM (\Personagem
           { velocidade = vel
           , tipo = Fantasma
@@ -112,7 +109,7 @@ desenhaFantasmas Estado {modo = EmJogo Jogo1, jogo = Jogo {inimigos = l}} =
           , vida = v
           , pontos = p
           , aplicaDano = dano
-          } -> transPos pos . turnEste dir . tamanhoscale tam $ fantasma) l
+          } -> translateParaPos pos . turnEste dir . tamanhoscale tam $ fantasma) l
 
 
 
@@ -122,7 +119,7 @@ desenhaJogo e = do
   colec <- desenhaColec e
   let fant2 = pictures fant
       colec2 = pictures colec
-  desenhaJogador e <> return (fant2 <> colec2) -- <> junta as imagens
+  desenhaJogador e <> return (colec2 <> fant2 ) -- <> junta as imagens
 
 
 
@@ -137,17 +134,18 @@ tamanhoscale :: (Double,Double) -> IO Picture -> IO Picture
 tamanhoscale (x,y) p= do
   scale (realToFrac x) (realToFrac y) <$> p
 
-transPos :: Posicao -> IO Picture -> IO Picture
-transPos (x,y) p = do
-  translate (realToFrac x) (realToFrac y) <$> p
+translateParaPos :: Posicao -> IO Picture -> IO Picture
+translateParaPos (x,y) p = do
+  translate ((realToFrac x)*80-400) ((realToFrac y)*80-420) <$> p
+  --translate ((realToFrac x)*290 -1440) ((realToFrac y)*290- 1080) <$> p
 
-
+-- funcao coordenada para pixeis: x * 80 - 400; y * 80 - 420
 -- funções reage
 
 reageEvento :: Event -> Estado -> IO Estado
 reageEvento evento estado@Estado {modo= modo} = case modo of
   MenuInicial jogar -> menureage evento estado -- Passar o estado corrente para o reageMenu
-  EmJogo op -> jogoreage evento estado
+  EmJogo -> jogoreage evento estado
   Mensagem op -> reageMensagem evento op estado
   Pausa op -> pausareage evento estado
 
@@ -160,7 +158,7 @@ pausareage (EventKey (SpecialKey KeyUp) Down _ _) e@Estado {modo = Pausa VoltaMe
 pausareage (EventKey (SpecialKey KeyEnter) Down _ _) e@Estado {modo = Pausa VoltaMenu} =
   return e {modo = MenuInicial Jogar}
 pausareage (EventKey (SpecialKey KeyEnter) Down _ _) e@Estado {modo = Pausa RetomaJogo} =
-  return e {modo = EmJogo Jogo1}
+  return e {modo = EmJogo}
 
 
 menureage :: Event -> Estado -> IO Estado
@@ -168,18 +166,27 @@ menureage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = MenuInicial 
   return e {modo = MenuInicial Sair}
 menureage (EventKey (SpecialKey KeyUp) Down _ _) e@Estado {modo = MenuInicial Sair} =
   return e {modo = MenuInicial Jogar}
+menureage (EventKey (SpecialKey KeyUp) Down _ _) e@Estado {modo = MenuInicial Jogar} =
+  return e {modo = MenuInicial Opcoes}
+menureage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = MenuInicial Sair} =
+  return e {modo = MenuInicial Opcoes}
+menureage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = MenuInicial Opcoes } =
+  return e {modo = MenuInicial Jogar}
+menureage (EventKey (SpecialKey KeyUp) Down _ _) e@Estado {modo = MenuInicial Opcoes} =
+  return e {modo = MenuInicial Sair}
 menureage (EventKey (SpecialKey KeyEnter) Down _ _) e@Estado {modo = MenuInicial Jogar} =
-  return e {modo = EmJogo Jogo1}
+  return e {modo = EmJogo}
 menureage (EventKey (SpecialKey KeyEnter) Down _ _) e@Estado {modo = MenuInicial Sair} = error "Sair do jogo"
+menureage (EventKey (SpecialKey KeyEnter) Down _ _) e@Estado {modo = MenuInicial Opcoes} = 
+    return e {modo = OpcoesOp}
 menureage _ e = return e
 
 
 jogoreage :: Event -> Estado -> IO Estado         -- !!!
-jogoreage (EventKey (SpecialKey KeyEsc) Down _ _) e@Estado {modo = EmJogo Jogo1} =
+jogoreage (EventKey (SpecialKey KeyEsc) Down _ _) e@Estado {modo = EmJogo} =
   return e {modo = Pausa RetomaJogo}
 jogoreage (EventKey (SpecialKey KeyEsc) Down _ _) e@Estado {modo = Pausa _} =
-  return e {modo = EmJogo Jogo1}
-
+  return e {modo = EmJogo}
 
 
 
@@ -193,7 +200,7 @@ reageMensagem _ estado e@Estado {modo = modo} = return (e{modo=Mensagem estado})
 janela :: Display
 janela = InWindow
        "DK"
-       (1024, 768)
+       (1440, 1080)
        (0,0)
 
 corFundo = black
@@ -216,7 +223,7 @@ estadoInicial = Estado
 
 main :: IO ()
 main = do
-  playIO janela corFundo fr estadoInicial desenhaMenu menureage tempof
+  playIO janela corFundo fr estadoInicial desenha menureage tempof
 
 {-
 
@@ -261,5 +268,6 @@ en1 = Personagem (0.0,0.0) Fantasma (8,7) Este (0.8,0.8) False True 10 0 (False,
 en2 = Personagem (0.0,0.0) Fantasma (8.7,7) Este (0.8,0.8) False True 10 0 (False, 0.0)
 
 c1 = (Martelo, (5,1))
+c2= (Moeda, (5,1))
 
-j1 = Jogo gameMap1 [en1,en2] [c1] pl1
+j1 = Jogo gameMap1 [en1,en2] [c2] pl1
