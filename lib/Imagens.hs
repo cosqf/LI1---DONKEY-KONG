@@ -7,22 +7,25 @@ type Imagem = [(String, Picture)]
 
 getImages :: IO Imagem
 getImages = do
-  Just marioanda1 <- loadJuicyPNG "lib/imagens/marioanda1.png"
-  Just marioanda2 <- loadJuicyPNG "lib/imagens/marioanda2.png"
-  Just mariomarteloandadown <- loadJuicyPNG "lib/imagens/mariomarteloandadown.png"
-  Just mariomartelodown <- loadJuicyPNG "lib/imagens/mariomartelodown.png"
-  Just mariomarteloup <- loadJuicyPNG "lib/imagens/mariomarteloup.png"
-  Just mariomarteloupanda <- loadJuicyPNG "lib/imagens/mariomarteloupanda.png"
-  Just mariomarteloupanda2 <- loadJuicyPNG "lib/imagens/mariomarteloupanda2.png"
-  Just mariomorto1 <- loadJuicyPNG "lib/imagens/mariomorto1.png"
-  Just mariomorto2 <- loadJuicyPNG "lib/imagens/mariomorto2.png"
-  Just mariomorto3 <- loadJuicyPNG "lib/imagens/mariomorto3.png"
-  Just mariomorto4 <- loadJuicyPNG "lib/imagens/mariomorto4.png"
-  Just marioparado <- loadJuicyPNG "lib/imagens/marioparado.png"
-  Just mariopulo <- loadJuicyPNG "lib/imagens/mariopulo.png"
-  Just mariorip <- loadJuicyPNG "lib/imagens/mariorip.png"
-  Just mariosubirfim <- loadJuicyPNG "lib/imagens/mariosubirfim.png"
-  Just mariosubir <- loadJuicyPNG "lib/imagens/mariosubir.png"
+  Just marioanda1 <- loadJuicyPNG "lib/Imagens/marioanda1.png"
+  Just marioanda2 <- loadJuicyPNG "lib/Imagens/marioanda2.png"
+  Just mariomarteloandadown <- loadJuicyPNG "lib/Imagens/mariomarteloandadown.png"
+  Just mariomartelodown <- loadJuicyPNG "lib/Imagens/mariomartelodown.png"
+  Just mariomarteloup <- loadJuicyPNG "lib/Imagens/mariomarteloup.png"
+  Just mariomarteloupanda <- loadJuicyPNG "lib/Imagens/mariomarteloupanda.png"
+  Just mariomarteloupanda2 <- loadJuicyPNG "lib/Imagens/mariomarteloupanda2.png"
+  Just mariomorto1 <- loadJuicyPNG "lib/Imagens/mariomorto1.png"
+  Just mariomorto2 <- loadJuicyPNG "lib/Imagens/mariomorto2.png"
+  Just mariomorto3 <- loadJuicyPNG "lib/Imagens/mariomorto3.png"
+  Just mariomorto4 <- loadJuicyPNG "lib/Imagens/mariomorto4.png"
+  Just marioparado <- loadJuicyPNG "lib/Imagens/marioparado.png"
+  Just mariopulo <- loadJuicyPNG "lib/Imagens/mariopulo.png"
+  Just mariorip <- loadJuicyPNG "lib/Imagens/mariorip.png"
+  Just mariosubirfim <- loadJuicyPNG "lib/Imagens/mariosubirfim.png"
+  Just mariosubir <- loadJuicyPNG "lib/Imagens/mariosubir.png"
+  Just coin <- loadJuicyPNG "lib/Imagens/coin.png"
+  Just martelo <- loadJuicyPNG "lib/Imagens/martelo.png"
+  Just fantasma <- loadJuicyPNG "lib/Imagens/fantasma.png"
 
   return [
     ("marioanda1", marioanda1),
@@ -40,7 +43,10 @@ getImages = do
     ("mariopulo", mariopulo),
     ("mariorip", mariorip),
     ("mariosubirfim", mariosubirfim),
-    ("mariosubir", mariosubir)
+    ("mariosubir", mariosubir),
+    ("coin", coin),
+    ("martelo", martelo),
+    ("fantasma", martelo)
     ]
 
 obterimagem :: String -> IO Imagem -> IO Picture
@@ -67,3 +73,6 @@ mariopulo = obterimagem "mariopulo" getImages
 mariorip = obterimagem "mariorip" getImages
 mariosubirfim = obterimagem "mariosubirfim" getImages
 mariosubir = obterimagem "mariosubir" getImages
+coin = obterimagem "coin" getImages 
+martelo = obterimagem "martelo" getImages
+fantasma = obterimagem "fantasma" getImages

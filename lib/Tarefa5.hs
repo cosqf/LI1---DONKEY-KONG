@@ -2,7 +2,6 @@ module Tarefa5 where
 import LI12324
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
-import Graphics.Gloss.Juicy
 
 
 marioMovTeclas :: Event -> Jogo -> Maybe Acao

@@ -1,45 +1,31 @@
 module Main where
-  
+
 import LI12324
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
+import Imagens
 
 data Estado = Estado --adicionar o resto
-  { 
+  {
     modo :: Modo,
-    jogo :: Jogo
+    jogo :: Jogo,
+    tempo :: Tempo
   }
 
-{-
-data Estado = Estado --adicionar o resto
-  { jogo :: Jogo,
-    imagens :: Imagens,
-    modo :: Modo
-  }
--}
+
+
 data Modo = EmJogo Jogo1 | MenuInicial MenuInicialOp | Pausa PausaOp | Mensagem MensagemOp
 
 data Jogo1 = Jogo1 deriving (Show, Eq)
 
-data MenuInicialOp = Jogar | Sair 
+data MenuInicialOp = Jogar | Sair
 
 data PausaOp = VoltaMenu | RetomaJogo deriving (Show,Eq)
 
 data MensagemOp = Vitoria | Derrota
   deriving (Show, Eq)
 
-{-
-data CategoriaImagens = IBlocos | IPersonagem | IInimigos
 
-type ImagensBlocos = [(Tema, [(Bloco, Picture)])]
-type ImagensPersonagens = [(Tema, [(Entidade, Picture)])]
-
-
-type Imagens = Imagens {
-        blocos :: ImagensBlocos,
-        personagens :: ImagensPersonagens
-                       }
--}
 
 -- funções desenha
 
@@ -59,6 +45,7 @@ desenhaMenu e@Estado {modo = Pausa RetomaJogo} =
   return $ Pictures [Color blue opcaoRetomaJogo, Color white opcaoSair]
 desenhaMenu e@Estado {modo = Pausa VoltaMenu} =
   return $ Pictures [Color white opcaoRetomaJogo, Color blue opcaoSair]
+desenhaMenu _ = return $ Pictures []
 
 opcaoJogar = Translate (-150) (100) $ Text "Jogar"
 opcaoSair = Translate (-150) (-100) $ Text "Sair"
@@ -79,40 +66,80 @@ desenhaMensagem op =
       Derrota -> Text "Você perdeu. Tente novamente."
 
 
-desenhaJogador:: Estado -> IO Picture 
-desenhaJogador estado@Estado {modo= EmJogo Jogo1, jogo= Jogo {jogador= 
-  Personagem {velocidade= (0,0), tipo= Jogador, posicao = (x,y), direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (False, d)}}} = 
-    return $ turnEste dir . tamanhoscale tam $ marioparado
-desenhaJogador estado@Estado {modo= EmJogo Jogo1, jogo= Jogo {jogador= 
-  Personagem {velocidade= (0,0), tipo= Jogador, posicao = (x,y), direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (True, d)}}}
-  |even d = return $ turnEste dir . tamanhoscale tam $ mariomarteloup
-  |otherwise = return $ turnEste dir . tamanhoscale tam $ mariomartelodown
-desenhaJogador estado@Estado {modo= EmJogo Jogo1, jogo= Jogo {jogador= 
-  Personagem {velocidade= vel, tipo= Jogador, posicao = (x,y), direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (False, d)}}} = 
-    return $ turnEste dir . tamanhoscale tam $ marioanda1 -- adicionar o resto dos sprites
-desenhaJogador estado@Estado {modo= EmJogo Jogo1, jogo= Jogo {jogador= 
-  Personagem {velocidade= vel, tipo= Jogador, posicao = (x,y), direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (True, d)}}}
-  |even d = return $ turnEste dir . tamanhoscale tam $ mariomarteloandaup
-  |otherwise = return $ turnEste dir . tamanhoscale tam $ mariomarteloandadown
-desenhaJogador estado@Estado {modo= EmJogo Jogo1, jogo= Jogo {jogador= 
-  Personagem {velocidade= vx, tipo= Jogador, posicao = (x,y), direcao=dir, tamanho= tam, emEscada= True, ressalta= False, vida= v, pontos= p, aplicaDano= (False, d)}}} = 
-    return $ tamanhoscale tam $ mariosubir -- adicionar o resto dos sprites
+
+desenhaJogador:: Estado -> IO Picture
+desenhaJogador Estado {modo= EmJogo Jogo1, tempo= t, jogo= Jogo {jogador=
+  Personagem {velocidade= (0,0), tipo= Jogador, posicao = pos, direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (False, d)}}} =
+    transPos pos . turnEste dir . tamanhoscale tam $ marioparado
+desenhaJogador Estado {modo= EmJogo Jogo1, tempo= t, jogo= Jogo {jogador=
+  Personagem {velocidade= (0,0), tipo= Jogador, posicao = pos, direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (True, d)}}}=
+    transPos pos . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+                                                                                           mariomarteloup
+                                                                                           else mariomartelodown
+desenhaJogador Estado {modo= EmJogo Jogo1, tempo= t, jogo= Jogo {jogador=
+  Personagem {velocidade= vel, tipo= Jogador, posicao = pos, direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (False, d)}}} =
+    transPos pos . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+                                                                                            marioanda1
+                                                                                            else marioanda2
+desenhaJogador Estado {modo= EmJogo Jogo1, tempo= t, jogo= Jogo {jogador=
+  Personagem {velocidade= vel, tipo= Jogador, posicao = pos, direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (True, d)}}} =
+    transPos pos . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+                                                                                            mariomarteloupanda
+                                                                                            else mariomarteloandadown
+desenhaJogador Estado {modo= EmJogo Jogo1, tempo= t, jogo= Jogo {jogador=
+  Personagem {velocidade= vx, tipo= Jogador, posicao = pos, direcao=dir, tamanho= tam, emEscada= True, ressalta= False, vida= v, pontos= p, aplicaDano= (False, d)}}} =
+    transPos pos . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+                                                                              mariosubir
+                                                                              else turnEste Este marioanda2
+-- falta morte
+
+desenhaColec :: Estado -> IO [Picture] --mapM converte a função de [IO Picture] para IO [Picture]
+desenhaColec Estado {modo = EmJogo Jogo1, jogo = Jogo {colecionaveis = l}} = mapM (\(c, pos) -> case c of 
+                                                                                Martelo -> transPos pos martelo
+                                                                                Moeda   -> transPos pos coin) l
 
 
-turnEste :: Direcao -> Picture -> Picture
-turnEste Este p= scale (-1) 1 p
+desenhaFantasmas :: Estado -> IO [Picture]
+desenhaFantasmas Estado {modo = EmJogo Jogo1, jogo = Jogo {inimigos = l}} =
+  mapM (\Personagem
+          { velocidade = vel
+          , tipo = Fantasma
+          , posicao = pos
+          , direcao = dir
+          , tamanho = tam
+          , emEscada = esc
+          , ressalta = True
+          , vida = v
+          , pontos = p
+          , aplicaDano = dano
+          } -> transPos pos . turnEste dir . tamanhoscale tam $ fantasma) l
+
+
+
+desenhaJogo :: Estado -> IO Picture
+desenhaJogo e = do
+  fant <- desenhaFantasmas e
+  colec <- desenhaColec e
+  let fant2 = pictures fant
+      colec2 = pictures colec
+  desenhaJogador e <> return (fant2 <> colec2) -- <> junta as imagens
+
+
+
+
+-- funcoes uteis 
+turnEste :: Direcao -> IO Picture -> IO Picture
+turnEste Este p= do
+  scale (-1) 1 <$> p
 turnEste _ p = p
 
-tamanhoscale :: (Double,Double) -> Picture -> Picture
-tamanhoscale (x,y)= scale (realToFrac x) (realToFrac y)
+tamanhoscale :: (Double,Double) -> IO Picture -> IO Picture
+tamanhoscale (x,y) p= do
+  scale (realToFrac x) (realToFrac y) <$> p
 
-
-
-desenhaJogo :: Estado -> IO Picture    -- graficos 
-desenhaJogo e = return Blank
-
-
-
+transPos :: Posicao -> IO Picture -> IO Picture
+transPos (x,y) p = do
+  translate (realToFrac x) (realToFrac y) <$> p
 
 
 -- funções reage
@@ -165,19 +192,74 @@ reageMensagem _ estado e@Estado {modo = modo} = return (e{modo=Mensagem estado})
 
 janela :: Display
 janela = InWindow
-       "DK" 
+       "DK"
        (1024, 768)
-       (0,0) 
+       (0,0)
 
-corFundo = black 
+corFundo = black
 
 fr:: Int
 fr = 60
 
-tempo :: Float -> Estado -> IO Estado
-tempo _ estado = return estado
+tempof :: Float -> Estado -> IO Estado
+tempof _ e@(Estado {modo= Pausa _}) = return e
+tempof _ e@(Estado {modo= MenuInicial _}) = return e {tempo= 0}
+tempof t e = return e {tempo= (realToFrac t) + tempo e}
+
+
+
+estadoInicial = Estado
+  { modo = MenuInicial Jogar
+  , jogo = j1
+  , tempo = 0
+  }
 
 main :: IO ()
 main = do
-  playIO janela corFundo fr (Estado {modo = MenuInicial Jogar}) desenhaMenu menureage tempo
+  playIO janela corFundo fr estadoInicial desenhaMenu menureage tempof
 
+{-
+
+:: Display	 Display mode.
+
+-> Color	 Background color.
+
+-> Int	 Number of simulation steps to take for each second of real time.
+
+-> world	The initial world.
+
+-> (world -> Picture)	 A function to convert the world a picture.
+
+-> (Event -> world -> world)	 A function to handle input events.
+
+-> (Float -> world -> world)	 A function to step the world one iteration. It is passed the period of time (in seconds) needing to be advanced.
+
+-> IO ()	 
+-}
+
+
+blocos1 :: [[Bloco]]
+blocos1 = [ [ Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio]
+          , [ Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio]
+          , [ Vazio, Vazio, Vazio, Plataforma, Plataforma, Plataforma, Plataforma, Vazio, Vazio, Vazio]
+          , [ Vazio, Vazio, Vazio, Escada, Vazio, Vazio, Escada, Vazio, Vazio, Vazio]
+          , [ Vazio, Vazio, Vazio, Escada, Vazio, Vazio, Escada, Vazio, Vazio, Vazio]
+          , [ Vazio, Vazio, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Vazio, Vazio]
+          , [ Vazio, Vazio, Escada, Vazio, Vazio, Vazio, Vazio, Escada, Vazio, Vazio]
+          , [ Vazio, Vazio, Escada, Vazio, Vazio, Vazio, Vazio, Escada, Vazio, Vazio]
+          , [ Vazio, Alcapao, Plataforma, Plataforma, Alcapao, Plataforma, Plataforma, Plataforma, Plataforma, Vazio]
+          , [ Vazio, Escada, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio]
+          , [ Vazio, Escada, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio]
+          , [ Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma]]
+
+gameMap1 :: Mapa
+gameMap1 = Mapa ((8.5, 6.5), Este) (5, 1.5) blocos1
+
+pl1 = Personagem (0.0,0.0) Jogador (8.5,7) Oeste (0.8,0.8) False False 10 0 (True, 10.0)
+
+en1 = Personagem (0.0,0.0) Fantasma (8,7) Este (0.8,0.8) False True 10 0 (False, 0.0)
+en2 = Personagem (0.0,0.0) Fantasma (8.7,7) Este (0.8,0.8) False True 10 0 (False, 0.0)
+
+c1 = (Martelo, (5,1))
+
+j1 = Jogo gameMap1 [en1,en2] [c1] pl1
