@@ -83,7 +83,7 @@ j8 = Jogo gameMap2 [en3] [] pl5
 teste5 = "T5: Alcapao e removido por jogador mas nao pelo inimigo." ~: j8 ~=? movimenta 100 1.0 j7
 
 pl6 = Personagem (0.0,0.0) Jogador (5,1) Oeste (1,1) False False 10 0 (False, 0.0)
-c2 = (Martelo, (5,1))
+c2 = (Moeda, (5,1))
 
 j9 = Jogo gameMap1 [] [c2] pl6
 

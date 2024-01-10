@@ -5,7 +5,9 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 
 data Estado = Estado --adicionar o resto
-  { modo :: Modo
+  { 
+    modo :: Modo,
+    jogo :: Jogo
   }
 
 {-
@@ -16,6 +18,7 @@ data Estado = Estado --adicionar o resto
   }
 -}
 data Modo = EmJogo Jogo1 | MenuInicial MenuInicialOp | Pausa PausaOp | Mensagem MensagemOp
+
 data Jogo1 = Jogo1 deriving (Show, Eq)
 
 data MenuInicialOp = Jogar | Sair 
@@ -76,11 +79,37 @@ desenhaMensagem op =
       Derrota -> Text "Você perdeu. Tente novamente."
 
 
+desenhaJogador:: Estado -> IO Picture 
+desenhaJogador estado@Estado {modo= EmJogo Jogo1, jogo= Jogo {jogador= 
+  Personagem {velocidade= (0,0), tipo= Jogador, posicao = (x,y), direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (False, d)}}} = 
+    return $ turnEste dir . tamanhoscale tam $ marioparado
+desenhaJogador estado@Estado {modo= EmJogo Jogo1, jogo= Jogo {jogador= 
+  Personagem {velocidade= (0,0), tipo= Jogador, posicao = (x,y), direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (True, d)}}}
+  |even d = return $ turnEste dir . tamanhoscale tam $ mariomarteloup
+  |otherwise = return $ turnEste dir . tamanhoscale tam $ mariomartelodown
+desenhaJogador estado@Estado {modo= EmJogo Jogo1, jogo= Jogo {jogador= 
+  Personagem {velocidade= vel, tipo= Jogador, posicao = (x,y), direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (False, d)}}} = 
+    return $ turnEste dir . tamanhoscale tam $ marioanda1 -- adicionar o resto dos sprites
+desenhaJogador estado@Estado {modo= EmJogo Jogo1, jogo= Jogo {jogador= 
+  Personagem {velocidade= vel, tipo= Jogador, posicao = (x,y), direcao=dir, tamanho= tam, emEscada= False, ressalta= False, vida= v, pontos= p, aplicaDano= (True, d)}}}
+  |even d = return $ turnEste dir . tamanhoscale tam $ mariomarteloandaup
+  |otherwise = return $ turnEste dir . tamanhoscale tam $ mariomarteloandadown
+desenhaJogador estado@Estado {modo= EmJogo Jogo1, jogo= Jogo {jogador= 
+  Personagem {velocidade= vx, tipo= Jogador, posicao = (x,y), direcao=dir, tamanho= tam, emEscada= True, ressalta= False, vida= v, pontos= p, aplicaDano= (False, d)}}} = 
+    return $ tamanhoscale tam $ mariosubir -- adicionar o resto dos sprites
+
+
+turnEste :: Direcao -> Picture -> Picture
+turnEste Este p= scale (-1) 1 p
+turnEste _ p = p
+
+tamanhoscale :: (Double,Double) -> Picture -> Picture
+tamanhoscale (x,y)= scale (realToFrac x) (realToFrac y)
+
+
+
 desenhaJogo :: Estado -> IO Picture    -- graficos 
-desenhaJogo jogo =
-  return Blank
-
-
+desenhaJogo e = return Blank
 
 
 
@@ -90,10 +119,10 @@ desenhaJogo jogo =
 
 reageEvento :: Event -> Estado -> IO Estado
 reageEvento evento estado@Estado {modo= modo} = case modo of
-  MenuInicial jogar -> menureage evento (Estado modo) -- Passar o estado corrente para o reageMenu
+  MenuInicial jogar -> menureage evento estado -- Passar o estado corrente para o reageMenu
   EmJogo op -> jogoreage evento estado
-  Mensagem op -> reageMensagem evento op
-  Pausa op -> pausareage evento $ Estado modo
+  Mensagem op -> reageMensagem evento op estado
+  Pausa op -> pausareage evento estado
 
 
 pausareage :: Event -> Estado -> IO Estado
@@ -121,14 +150,17 @@ menureage _ e = return e
 jogoreage :: Event -> Estado -> IO Estado         -- !!!
 jogoreage (EventKey (SpecialKey KeyEsc) Down _ _) e@Estado {modo = EmJogo Jogo1} =
   return e {modo = Pausa RetomaJogo}
+jogoreage (EventKey (SpecialKey KeyEsc) Down _ _) e@Estado {modo = Pausa _} =
+  return e {modo = EmJogo Jogo1}
 
 
 
 
-reageMensagem :: Event -> MensagemOp -> IO Estado
-reageMensagem (EventKey (SpecialKey KeyEnter) Down _ _) _ =
-  return (Estado (MenuInicial Jogar)) -- Retorne ao menu após pressionar Enter
-reageMensagem _ estado = return (Estado (Mensagem estado)) -- Mantenha o estado atual se outros eventos ocorrerem
+
+reageMensagem :: Event -> MensagemOp -> Estado -> IO Estado
+reageMensagem (EventKey (SpecialKey KeyEnter) Down _ _) _ e@Estado {modo = modo}=
+  return (e {modo= MenuInicial Jogar}) -- Retorne ao menu após pressionar Enter
+reageMensagem _ estado e@Estado {modo = modo} = return (e{modo=Mensagem estado}) -- Mantenha o estado atual se outros eventos ocorrerem
 
 
 janela :: Display
@@ -149,20 +181,3 @@ main :: IO ()
 main = do
   playIO janela corFundo fr (Estado {modo = MenuInicial Jogar}) desenhaMenu menureage tempo
 
-
-
-
-{-
-marioMov (EventKey (SpecialKey KeyUp) Down _ _) e@Estado {modo = EmJogo Jogo1} (mario@(Personagem {emEscada= b})
-    |b = Just Subir
-    |otherwise = Nothing
-marioMov (EventKey (SpecialKey KeyDown) Down _ _) mario@(Personagem {emEscada= b})
-    |b = Just Descer
-    |otherwise = Nothing
-marioMov (EventKey (SpecialKey KeyLeft) Down _ _) mario@(Personagem {emEscada= False}) = Just AndarEsquerda
-marioMov (EventKey (SpecialKey KeyRight) Down _ _) mario@(Personagem {emEscada= False})= Just AndarDireita
-marioMov (EventKey (SpecialKey KeySpace) Up _ _) mario@(Personagem {aplicaDano = (b,_)})
-    |b= Nothing
-    |otherwise= Just Saltar
-marioMov _ e = Just Parar
--}
