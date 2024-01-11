@@ -11,7 +11,6 @@ module Tarefa1 where
 import LI12324
 
 
-
 --  Calcula a hitbox de um 'Personagem'.
 hitboxPersonagem :: Personagem -> Hitbox
 hitboxPersonagem p = let 
@@ -22,7 +21,7 @@ hitboxPersonagem p = let
 
 -- Testa se um 'Personagem' colide com as paredes ou plataformas do 'Mapa'.
 colisoesParede :: Mapa -> Personagem -> Bool
-colisoesParede (Mapa _ _ blocos) personagem =
+colisoesParede m@(Mapa _ _ blocos) personagem =
   let hitboxPers = hitboxPersonagem personagem
       (posX, posY) = posicao personagem
       (width, height) = tamanho personagem
@@ -33,11 +32,12 @@ colisoesParede (Mapa _ _ blocos) personagem =
     -- Verifica colisão com paredes laterais
     posX - width/2 <= 0 || posX + width/2 >= mapWidth ||
     -- Verifica colisão com o topo do mapa
-    posY + height/2 >= mapHeight ||
+    posY - height/2 <= 0 ||
     -- Verifica colisão com plataformas
     case safeGet blocoX blocoY blocos of
       Just Plataforma -> posY - height/2 < fromIntegral blocoY + blocoH
       _               -> False
+
 
 -- Função auxiliar para obter um elemento de uma matriz com verificação de limites
 safeGet :: Int -> Int -> [[a]] -> Maybe a

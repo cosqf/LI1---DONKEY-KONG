@@ -79,8 +79,11 @@ movimentosM (Just Parar) (p) = p {velocidade = (0,0)}
 movimentosM (Just Saltar) p@(Personagem {velocidade= (vx,vy)}) = 
     p {velocidade = (vx, -10)} 
 
+movimentos :: [Maybe Acao] -> [Personagem] -> [Personagem]
+movimentos ms ps = map (\(m, p) -> movimentosM m p) $ zip ms ps
 
 
+{-
 movimentos :: [Maybe Acao] -> [Personagem] -> [Personagem] -- definição dos movimentos andar, subir etc
 movimentos [] [] = []
 movimentos (Just AndarDireita: ms) (p@(Personagem {velocidade= (vx,vy)}):ps) = 
@@ -93,7 +96,7 @@ movimentos (Just Parar: ms) (p:ps) = p {velocidade = (0,0)} : movimentos ms ps
 movimentos (Just Saltar: ms) (p@(Personagem {velocidade= (vx,vy)}):ps) = 
     p {velocidade = (vx, -10)} : movimentos ms ps
 movimentos (Nothing:ms) (p:ps) = p : movimentos ms ps 
-
+-}
 
 
 

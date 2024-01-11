@@ -36,20 +36,16 @@ fantasmahit (f@(Personagem {tipo=Fantasma, vida= v}):fs) h
 
 
 hitboxMartelo :: Personagem -> Hitbox
-hitboxMartelo mario@(Personagem {posicao = (x, y), direcao = d, aplicaDano = (True, t)}) = 
+hitboxMartelo mario@(Personagem {posicao = (x, y), direcao = d,tamanho= (xt,yt),emEscada=False, aplicaDano = (True, t)}) = 
     let (w, h) = tamanho mario      --copiei o formato da tarefa 1
     in
         case d of
-            Este -> ((x-w/2+1, y-h/2), (x+w/2+1, y+h/2)) --forma hitbox à direita do mario
-            Oeste -> ((x-w/2-1, y-h/2), (x+w/2-1, y+h/2)) --forma hitbox à esquerda do mario
+            Este -> (((x-w/2)+xt, y-h/2), ((x+w/2)+xt, y+h/2)) --forma hitbox à direita do mario
+            Oeste -> (((x-w/2)-xt, y-h/2), ((x+w/2)-xt, y+h/2)) --forma hitbox à esquerda do mario
+            _ -> ((-5,-4),(-5,-4))
+hitboxMartelo _ = ((-5,-4),(-5,-4))
 
-{-
-fantasmamorto :: [Personagem] -> [Personagem] -- suposto usar na lista q contem os inimigos no mapa apenas
-fantasmamorto (x:xs)= if tipo x == Fantasma && vida x == 0  --verifica se é fantasma e se tem 0 vidas
-                    then fantasmamorto xs --se sim, tira da lista
-                    else x: fantasmamorto xs --se n, mantem
--}
-fantasmamortopontos ::[Personagem] -> Personagem-> Personagem  -- recebe pontos por matar um fantasma, n está especificado q temos q fzr isto mas ?
+fantasmamortopontos ::[Personagem] -> Personagem-> Personagem  
 fantasmamortopontos [] m = m
 fantasmamortopontos (f@(Personagem {tipo=Fantasma, vida= v}):fs) mario@(Personagem{pontos = p})
     |overlap (hitboxMartelo mario) (hitboxPersonagem f)= mario {pontos= p+500} -- mais 500 pontos
@@ -98,9 +94,9 @@ queda mapa gravidade p
     |otherwise = p
 
 removeAlcapao :: Personagem -> Mapa -> Mapa
-removeAlcapao mario@(Personagem {posicao= (x,y)}) mapa@(Mapa a1 a2 l)
+removeAlcapao mario@(Personagem {posicao= (x,y), velocidade= (vx,vy)}) mapa@(Mapa a1 a2 l)
     |blocodirecao mario Sul mapa == Alcapao = Mapa a1 a2 (troca (x,y+1) Vazio mapa)
-    |elem (x,y-2) (posb mapa Alcapao) = Mapa a1 a2 (troca (x,y+2) Vazio mapa)
+    |vy/=0 && elem (x,y+2) (posb mapa Alcapao) = Mapa a1 a2 (troca (x,y+2) Vazio mapa)
     |otherwise = mapa
         where
             troca :: Posicao -> Bloco -> Mapa -> [[Bloco]]
@@ -215,3 +211,5 @@ cos de plataforma. Mais ainda, deve também assumir que a hitbox
 da estrela ou de um objecto coleccionável tem tamanho 1 × 1, i.e.                colisao
 estrela/martelo/moeda ocupam um bloco da matriz na totalidade.
 -}
+
+
