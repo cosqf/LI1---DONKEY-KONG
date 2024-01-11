@@ -59,18 +59,18 @@ ehAlcapao :: Bloco -> Bool
 ehAlcapao Alcapao = True
 ehAlcapao _       = False
 
--- | Verifica se uma escada obedece às restrições.
+{-} Verifica se uma escada obedece às restrições, True indica que o mapa possui escadas válidas, e o valor False indica que não possui.-}
 escadaValida :: Mapa -> Bool
 escadaValida (Mapa _ _ matriz) = all verificaEscada todasEscadas
   where
     todasEscadas = concatMap (separarEscadas . filter (== Escada)) matriz
-
+    -- divide uma lista de blocos em escadas
     separarEscadas :: [Bloco] -> [[Bloco]]
     separarEscadas [] = []
     separarEscadas lista =
       let (escada, resto) = span (== Escada) lista
       in escada : separarEscadas (dropWhile (== Escada) resto)
-
+    -- verifica se a escada é válida
     verificaEscada escada =
       case escada of
         [] -> False
@@ -99,7 +99,7 @@ checkcolec :: [(Colecionavel, Posicao)] -> Mapa -> Bool
 checkcolec l mapa = notElem Plataforma pos &&  notElem Alcapao pos
   where pos = map (\(c, p) -> blocopos p mapa) l
 
-
+-- provavelmente vai ser alterada
 criarPersonagem :: Velocidade -> Entidade -> Posicao -> Direcao -> (Double, Double) -> Int -> Int -> (Bool, Double) -> [[Bloco]] -> Maybe Personagem
 criarPersonagem vel ent pos dir tam vida pontos dano matrizBlocos =
   let tamanhoX = fst tam
@@ -111,7 +111,7 @@ criarPersonagem vel ent pos dir tam vida pontos dano matrizBlocos =
        then Just (Personagem vel ent pos dir tam False False vida pontos dano)
        else Nothing
 
-
+-- talvez seja alterada
 criarColecionavel :: Colecionavel -> Posicao -> [[Bloco]] -> Maybe (Colecionavel, Posicao)
 criarColecionavel col pos matrizBlocos =
   let -- Verifica se o bloco na posição inicial do colecionável é Vazio
@@ -120,9 +120,10 @@ criarColecionavel col pos matrizBlocos =
        then Just (col, pos)
        else Nothing
 
+{-verifica se algum bloco do mapa é um alçapão, e se o personagem cabe dentro deles-}
 alcapaoL ::Mapa -> Personagem -> Bool
 alcapaoL (Mapa _ _ l) Personagem {tamanho=(x,y)}= notElem Alcapao (concat l) || all ((>= (ceiling x)) . length) (filter (elem Alcapao) (concat (map group l)))
-    --como os alcapoes têm tamanho 1x1, oq isto verifica é se o tamanho do mario cabe neles, ou seja, se o mario tiver tamanho 2x2, 
+    
 
 
 
@@ -163,8 +164,8 @@ geraMapaAleatorio s = shuffleBlocos s blocos1
 shuffleBlocos :: Semente -> [[Bloco]] -> [[Bloco]]
 shuffleBlocos s blocos =
   let blocoFixo = Escada  -- Escolha um bloco fixo (por exemplo, Plataforma)
-      matrizFixa = replicate 1 (replicate 10 blocoFixo)  -- Mantenha duas linhas fixas de plataformas (ajuste conforme necessário)
-      (blocosRestantes, _) = shuffle (mkStdGen s) $ concat $ filter (\row -> head row /= blocoFixo) blocos  -- Pegue os blocos que não são fixos
+      matrizFixa = replicate 1 (replicate 10 blocoFixo)  -- Mantenha duas linhas fixas de plataformas que pode ser ajustado conforme necessário)
+      (blocosRestantes, _) = shuffle (mkStdGen s) $ concat $ filter (\row -> head row /= blocoFixo) blocos  -- os blocos que não são fixos
       matrizEmbaralhada = matrizFixa ++ chunkList (length (head blocos)) blocosRestantes
   in matrizEmbaralhada
 
