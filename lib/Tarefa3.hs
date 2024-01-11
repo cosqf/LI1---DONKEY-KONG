@@ -28,13 +28,15 @@ movimenta semente tempo Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= 
             jogador = marioatualizado
         }
 
+{-verifica se um fantasma colide com um martelo, se a hitbox do martelo estiver sobreposta à hitboxdo fantasma, a vida do fantasma é atualizada e a lista é atualizada, caso não aconteça a lista fica igual-}
 fantasmahit :: [Personagem] -> Personagem -> [Personagem]          --recebe lista de inimigos e mario
 fantasmahit [] _ = []
 fantasmahit (f@(Personagem {tipo=Fantasma, vida= v}):fs) h
     |overlap (hitboxMartelo h) (hitboxPersonagem f) = f {vida= v-1} : fantasmahit fs h      --se a hitbox tocar nas hitboxes do fantasma perde uma vida
     |otherwise= fantasmahit fs h
 
-
+{-calcula a hitbox do martelo do jogador,Se o personagem estiver virado para a direita, a função retorna um retângulo que se estende uma unidade para a direita do personagem.
+Se o personagem estiver virado para a esquerda, a função retorna um retângulo que se estende uma unidade para a esquerda do personagem.-}
 hitboxMartelo :: Personagem -> Hitbox
 hitboxMartelo mario@(Personagem {posicao = (x, y), direcao = d,tamanho= (xt,yt),emEscada=False, aplicaDano = (True, t)}) = 
     let (w, h) = tamanho mario      --copiei o formato da tarefa 1
@@ -51,7 +53,7 @@ fantasmamortopontos (f@(Personagem {tipo=Fantasma, vida= v}):fs) mario@(Personag
     |overlap (hitboxMartelo mario) (hitboxPersonagem f)= mario {pontos= p+500} -- mais 500 pontos
     |otherwise= fantasmamortopontos fs mario
 
-
+{-verifica se um personagem colide com o jogador,se um inimigo colidir com o jogador, o jogador perde uma vida-}
 jogadorhit ::[Personagem] -> Personagem -> Personagem --verifica se a colisao de personagens com o mario acontece
 jogadorhit [] m = m
 jogadorhit (x@(Personagem {vida=vf}):xs) mario@(Personagem{vida = v})
@@ -63,36 +65,37 @@ jogadorhit (x@(Personagem {vida=vf}):xs) mario@(Personagem{vida = v})
 gameover :: Personagem -> Bool --recebe vida e dá true ou false
 gameover Personagem {vida=v} = v == 0 --e verifica se é 0. se sim, n tem mais vida
 
-
+{-remove colecionáveis do mapa se o jogador colidir com eles-}
 tiracole :: [(Colecionavel, Posicao)] -> Personagem -> [(Colecionavel, Posicao)] 
 tiracole [] mario = []
 tiracole ((c,x):t) mario
     |colisoesHitB x (posicao mario) = tiracole t mario --remove do mapa os colecionaveis
     |otherwise= (c,x):t
 
-
+{-coleta coleccionável e atribui recompensas-}
 apanhacole:: [(Colecionavel, Posicao)] -> Personagem -> Personagem
 apanhacole [] mario = mario
 apanhacole (((Moeda,x):t)) mario@(Personagem {pontos = p}) --verifica se a posicao da moeda é igual à do mario
-    |colisoesHitB x (posicao mario) = mario {pontos= p + 500} --se sim recebe 500 pontos (verificar dps se é msm essa a quantidade de pontos recebida no jogo)
+    |colisoesHitB x (posicao mario) = mario {pontos= p + 500} --se sim recebe 500 pontos 
     |otherwise = apanhacole t mario -- se n continua a verificar 
 apanhacole (((Martelo,x):t)) mario@(Personagem {aplicaDano=(b,d)})
     |colisoesHitB x (posicao mario) = mario{aplicaDano =(True,10)} --se a posicao do mario for igual à do martelo, o mario recebe a condição de dar dano
     |otherwise = apanhacole t mario --atenção o tempo n está definido ainda
 
-
+{-remove o martelo do jogador se o tempo de duração do martelo acabar-}
 removeMartelo :: Personagem -> Tempo -> Personagem --recebe o tempo e verifica se o tempo do martelo está a zero
 removeMartelo mario@(Personagem {aplicaDano = (False,0)}) t = mario
 removeMartelo mario@(Personagem {aplicaDano = (True , m)}) t
     |t - m == t = mario {aplicaDano = (False, 0)}
     |otherwise= mario {aplicaDano = (True, m-1)}
 
-
+-- atualiza a velocidade e a direção do jogador para que ele caia
 queda :: Mapa -> Velocidade -> Personagem-> Personagem         -- velocidade fica igual à gravidade e a direção a sul
 queda mapa gravidade p
     |blocodirecao p Sul mapa == Vazio = p {velocidade= gravidade, direcao = Sul}
     |otherwise = p
 
+{-remove um alçapão do mapa se o jogador estiver sobre ele e esse bloco é preenchido com um bloco vazio-}
 removeAlcapao :: Personagem -> Mapa -> Mapa
 removeAlcapao mario@(Personagem {posicao= (x,y), velocidade= (vx,vy)}) mapa@(Mapa a1 a2 l)
     |blocodirecao mario Sul mapa == Alcapao = Mapa a1 a2 (troca (x,y+1) Vazio mapa)
@@ -109,12 +112,13 @@ removeAlcapao mario@(Personagem {posicao= (x,y), velocidade= (vx,vy)}) mapa@(Map
             auxTroca (1,1) b h = b:tail h
             auxTroca (x,1) b (h:t) = h: auxTroca (x-1,1) b t
 
-
+--verifica se um personagem colide com alguma coisa no mapa
 colisao :: Personagem -> Mapa -> Personagem
 colisao p m
     |colisoesParede m p =  p{velocidade=(0,0)}
     |otherwise = p
 
+--atualiza a posição de um personagem de acordo com sua velocidade
 velocidades :: Personagem -> Personagem -- relacionar a velocidade com a posicao
 velocidades p@Personagem{velocidade=(0,0), posicao=(x,y)} = p
 velocidades p@Personagem{velocidade=(vx, 0), posicao=(x,y)} = 
@@ -147,8 +151,8 @@ blocodirecao (Personagem {posicao= (x,y)}) Sul mapa = blocopos (x,y+1) mapa
 blocodirecao (Personagem {posicao= (x,y)}) Oeste mapa = blocopos (x-1,y) mapa
 blocodirecao (Personagem {posicao= (x,y)}) Este mapa = blocopos (x+1,y) mapa
 
-
-blocopos :: Posicao -> Mapa -> Bloco    -- indica o bloco na coordenada (x,y)
+-- indica o bloco na coordenada (x,y)
+blocopos :: Posicao -> Mapa -> Bloco    
 blocopos (x, y) (Mapa _ _ mapa)
     |y<0 || y>fromIntegral maxy=Vazio      -- se estiver fora do mapa dá vazio
     |x<0 || x>fromIntegral maxx=Vazio
@@ -161,8 +165,8 @@ blocopos (x, y) (Mapa _ _ mapa)
             maxx = length (head mapa)
             fun x y = (mapa !! floor y) !! floor x
         
-
-posb :: Mapa -> Bloco -> [Posicao] --calcula todas as posicoes de um bloco
+--calcula todas as posicoes de um bloco no mapa
+posb :: Mapa -> Bloco -> [Posicao] 
 posb (Mapa _ _ l) b = aux (map (elemIndices b) l) 1.0
   where
     aux :: [[Int]] -> Double -> [Posicao]
@@ -170,6 +174,7 @@ posb (Mapa _ _ l) b = aux (map (elemIndices b) l) 1.0
     aux ([]:c) x = aux c (x + 1)
     aux ((a:b):c) x = (x, fromIntegral a) : aux (b:c) x
 
+-- função auxiliar que verifica se duas hitboxes estão colidindo
 colisoesHitB :: Posicao -> Posicao -> Bool
 colisoesHitB (x,y) (z,w)=
   let hitboxP1 = ((x - 1/2, y - 1/2), (x + 1/2, y + 1/2))
@@ -211,5 +216,3 @@ cos de plataforma. Mais ainda, deve também assumir que a hitbox
 da estrela ou de um objecto coleccionável tem tamanho 1 × 1, i.e.                colisao
 estrela/martelo/moeda ocupam um bloco da matriz na totalidade.
 -}
-
-
