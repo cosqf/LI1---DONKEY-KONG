@@ -16,8 +16,8 @@ import Funcoes
 movimenta :: Semente -> Tempo -> Jogo -> Jogo
 movimenta semente tempo Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j } =
     let
-        iniatualizado = multf (flip ressaltacheck m) . multf velocidades. flip fantasmahit j . multf (flip colisao m) . multf (queda m (0,10))  $ i
-        marioatualizado = velocidades. fantasmamortopontos i . jogadorhit i . flip removeMartelo  tempo. queda m (0,10) . flip colisao m . apanhacole c . flip removeMartelo tempo $ j
+        iniatualizado = multf (flip ressaltacheck m) . multf velocidades. flip fantasmahit j . multf (flip colisao m) $ i
+        marioatualizado = velocidades. fantasmamortopontos i . jogadorhit i . removeMartelo . queda m (0,10) . flip colisao m . apanhacole c $ j
         colecatualizado = tiracole c j
         mapaatualizado = removeAlcapao j m
     in
@@ -68,24 +68,25 @@ tiracole :: [(Colecionavel, Posicao)] -> Personagem -> [(Colecionavel, Posicao)]
 tiracole [] mario = []
 tiracole ((c,x):t) mario
     |colisoesHitB x (posicao mario) = tiracole t mario -- |remove do mapa os colecionaveis
-    |otherwise= (c,x):t
+    |otherwise= (c,x) : tiracole t mario
 
 {-|coleta coleccionável e atribui recompensas-}
 apanhacole:: [(Colecionavel, Posicao)] -> Personagem -> Personagem
 apanhacole [] mario = mario
 apanhacole (((Moeda,x):t)) mario@(Personagem {pontos = p}) -- |verifica se a posicao da moeda é igual à do mario
     |colisoesHitB x (posicao mario) = mario {pontos= p + 500} -- |se sim recebe 500 pontos 
-    |otherwise = apanhacole t mario -- se n continua a verificar 
+    |otherwise = apanhacole t mario -- |se n continua a verificar 
 apanhacole (((Martelo,x):t)) mario@(Personagem {aplicaDano=(b,d)})
     |colisoesHitB x (posicao mario) = mario{aplicaDano =(True,10)} -- |se a posicao do mario for igual à do martelo, o mario recebe a condição de dar dano
-    |otherwise = apanhacole t mario -- |atenção o tempo n está definido ainda
+    |otherwise = apanhacole t mario 
 
 {-|remove o martelo do jogador se o tempo de duração do martelo acabar-}
-removeMartelo :: Personagem -> Tempo -> Personagem -- |recebe o tempo e verifica se o tempo do martelo está a zero
-removeMartelo mario@(Personagem {aplicaDano = (False,0)}) t = mario
-removeMartelo mario@(Personagem {aplicaDano = (True , m)}) t
-    |t - m == t = mario {aplicaDano = (False, 0)}
-    |otherwise= mario {aplicaDano = (True, m-1)}
+removeMartelo :: Personagem -> Personagem -- |recebe o tempo e verifica se o tempo do martelo está a zero
+removeMartelo mario@(Personagem {aplicaDano = (False,0)}) = mario
+removeMartelo mario@(Personagem {aplicaDano = (True , m)})
+    |m <= 0 = mario {aplicaDano = (False, 0)}
+    |otherwise= mario{aplicaDano = (True , m-(1/60))} -- framerate de 60s: 1/60
+
 
 -- | atualiza a velocidade e a direção do jogador para que ele caia
 queda :: Mapa -> Velocidade -> Personagem-> Personagem         -- | velocidade fica igual à gravidade e a direção a sul
@@ -110,9 +111,10 @@ removeAlcapao mario@(Personagem {posicao= (x,y), velocidade= (vx,vy)}) mapa@(Map
             auxTroca (1,1) b h = b:tail h
             auxTroca (x,1) b (h:t) = h: auxTroca (x-1,1) b t
 
--- |verifica se um personagem colide com alguma coisa no mapa
+-- |verifica se um personagem colide com uma parede no mapa
 colisao :: Personagem -> Mapa -> Personagem
 colisao p m
+    |emEscada p = p
     |colisoesParede m p =  p{velocidade=(0,0)}
     |otherwise = p
 
@@ -152,7 +154,7 @@ overlap' :: Maybe Hitbox -> Hitbox -> Bool -- | mesmo que overlap mas aceita May
 overlap' Nothing _ = False
 overlap' (Just ((x1, y1), (x2, y2))) ((x3, y3), (x4, y4)) = x1 <= x4 && x2 >= x3 && y1 <= y4 && y2 >= y3
 
--- | função auxiliar que verifica se duas hitboxes estão colidindo
+-- | função auxiliar que verifica se duas hitboxes estão a colidir
 colisoesHitB :: Posicao -> Posicao -> Bool
 colisoesHitB (x,y) (z,w)=
   let hitboxP1 = ((x - 1/2, y - 1/2), (x + 1/2, y + 1/2))

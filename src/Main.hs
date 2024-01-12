@@ -3,6 +3,7 @@ module Main where
 import LI12324
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
+import Tarefa2 (valida)
 import Tarefa3 (movimenta)
 import Desenha (desenha)
 import Reage (reageEvento)
@@ -23,19 +24,22 @@ fr = 60
 tempof :: Float -> Estado -> IO Estado
 tempof _ e@(Estado {modo= Pausa _}) = return e
 tempof _ e@(Estado {modo= MenuInicial _}) = return e {tempo= 0}
-tempof t e = return $ e {jogo = movimenta 100 (realToFrac t) (jogo e)}
+tempof t e = 
+  return $ e {jogo = movimenta 100 (realToFrac t) (jogo e)}
 
 
 
 main :: IO ()
 main = do
+  images <- getImages
+  let
+    estadoInicial = (Estado {modo= MenuInicial Menu, jogo= jogo01, tempo= 0, imagens= images})
   --if valida $ jogo estadoInicial 
     --then do
-      images <- getImages
-      putStrLn "Jogo válido\nA carregar..."
-      playIO janela corFundo fr (Estado {modo= MenuInicial Menu, jogo= jogo01, tempo= 0, imagens= images}) desenha reageEvento tempof
-  --  else do
-    --  putStrLn "Jogo inválido"
+  putStrLn "Jogo válido\nA carregar..."
+  playIO janela corFundo fr estadoInicial desenha reageEvento tempof
+    --else do
+      --putStrLn "Jogo inválido"
 
 
 {-
@@ -58,8 +62,8 @@ main = do
 -}
 
 
-mapa2 :: Mapa
-mapa2 =
+mapa02 :: Mapa
+mapa02 =
   Mapa
     ((8.5, 6.5), Este)
     (5, 1.5)
@@ -72,7 +76,7 @@ mapa01 =
   Mapa
     ((8.5, 6.5), Este)
     (5, 1.5)
-    [ [Vazio,Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio],
+    [ [Plataforma, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Plataforma],
       [Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio],
       [Vazio, Vazio, Vazio, Plataforma, Plataforma, Plataforma, Plataforma, Vazio, Vazio, Vazio],
       [Vazio, Vazio, Vazio, Escada, Vazio, Vazio, Escada, Vazio, Vazio, Vazio],
@@ -104,7 +108,7 @@ jogadorParado =
   Personagem
     { velocidade = (0.0, 0.0),
       tipo = Jogador,
-      posicao = (4,10.5),
+      posicao = (8.5, 7.5),
       direcao = Oeste,
       tamanho = (0.8, 0.8),
       emEscada = False,
@@ -113,11 +117,14 @@ jogadorParado =
       pontos = 0,
       aplicaDano = (False, 0)
     }
+martelo = (Martelo, (7, 7.5))
+moeda = (Moeda, (6, 7.5))
 
 jogo01 :: Jogo
 jogo01 =
   Jogo
     { mapa = mapa01,
       inimigos = [inimigoModelo, inimigoModelo],
-      colecionaveis = [(Moeda, (5.5,4.5)), (Martelo,(4,10))],
-      jogador = jogadorParado}
+      colecionaveis = [martelo, moeda],
+      jogador = jogadorParado
+    }

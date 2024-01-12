@@ -4,7 +4,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import Imagens
 import Tarefa5
-
+import Funcoes
 
 
 desenha :: Estado -> IO Picture
@@ -68,12 +68,15 @@ desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
                                                                                            obterimagem "mariomarteloupanda" imgs
                                                                                             else obterimagem "mariomarteloandadown" imgs
 desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
-  Personagem {posicao = pos, direcao=dir, tamanho= tam, emEscada= True, aplicaDano= (False, d)},mapa = mapa}} =
-    let tamcomp = tamanhoCompMapa mapa
-    in translateParaPos pos tamcomp . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+  Personagem {posicao = pos, direcao=dir, tamanho= tam, emEscada= True, aplicaDano= (False, d)},mapa = mapa}}
+  |blocopos pos mapa == Vazio = translateParaPos pos tamcomp . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+                                                                            obterimagem "mariosubirfim" imgs
+                                                                              else obterimagem "mariosubir3" imgs                                                                           
+  |otherwise= translateParaPos pos tamcomp . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
                                                                             obterimagem "mariosubir" imgs
-                                                                              else turnEste Este (obterimagem "marioanda2" imgs)
-
+                                                                              else turnEste Este (obterimagem "mariosubir" imgs)
+    where tamcomp = tamanhoCompMapa mapa
+    
 -- falta morte
 
 desenhaColec :: Estado -> IO [Picture] 

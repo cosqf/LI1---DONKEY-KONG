@@ -22,9 +22,9 @@ getImages = do
   Just mariomorto3 <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariomorto3.png"
   Just mariomorto4 <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariomorto4.png"
   Just marioparado <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/marioparado.png"
-  Just mariopulo <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariopulo.png"
   Just mariorip <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariorip.png"
   Just mariosubirfim <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariosubirfim.png"
+  Just mariosubir3 <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariosubir3.png"
   Just mariosubir <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariosubir.png"
   Just coin <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/coin.png"
   Just martelo <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/martelo.png"
@@ -51,9 +51,9 @@ getImages = do
     ("mariomorto3", mariomorto3),
     ("mariomorto4", mariomorto4),
     ("marioparado", marioparado),
-    ("mariopulo", mariopulo),
     ("mariorip", mariorip),
     ("mariosubirfim", mariosubirfim),
+    ("mariosubir3", mariosubir3),
     ("mariosubir", mariosubir),
     ("coin", coin),
     ("martelo", martelo),
