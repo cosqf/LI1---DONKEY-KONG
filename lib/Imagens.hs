@@ -102,5 +102,4 @@ menusair = obterimagem "menusair" getImages
 alcapao = obterimagem "alcapao" getImages
 escada = obterimagem "escada" getImages
 plataforma = obterimagem "plataforma" getImages
-
 -}

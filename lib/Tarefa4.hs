@@ -23,16 +23,16 @@ atualiza listamov jogadormov Jogo {mapa= m, inimigos= i, colecionaveis= c, jogad
     jogador = movimentosM jogadormov j
     }
 
---| combina todas as funções de movimento relacionadas com os fantasmas
+-- | combina todas as funções de movimento relacionadas com os fantasmas
 allFantMov :: [Personagem] -> Mapa -> [Maybe Acao]   
 allFantMov [] _ = []
 allFantMov p  m=
-  case (head (fantescadas p m), head (fantMov p)) of --| fantescada toma prioridade
+  case (head (fantescadas p m), head (fantMov p)) of -- | fantescada toma prioridade
     (Just a, _)        -> Just a : allFantMov (tail p) m
     (Nothing , Just a) -> Just a : allFantMov (tail p) m
     _                  -> Nothing : allFantMov (tail p) m
 
---|gera uma lista de ações aleatórias para os fantasmas
+-- |gera uma lista de ações aleatórias para os fantasmas
 fantMov :: [Personagem] -> [Maybe Acao] -- movimento aleatorio, fzr mais inteligente dps
 fantMov [] = []
 fantMov f = func (zip f (geraAleatorios 10 4))
@@ -43,8 +43,8 @@ fantMov f = func (zip f (geraAleatorios 10 4))
             |even x = Just AndarDireita : func fs
             |otherwise = Just AndarEsquerda : func fs
 
---| decide se os fantasmas sobem as escadas ou não
-fantEscada :: [Personagem] -> Mapa -> [Personagem]   n
+-- | decide se os fantasmas sobem as escadas ou não
+fantEscada :: [Personagem] -> Mapa -> [Personagem]
 fantEscada [] _ = []
 fantEscada f mapa= func (zip f x)           -- fazer mais inteligente dps
     where
@@ -59,7 +59,7 @@ fantEscada f mapa= func (zip f x)           -- fazer mais inteligente dps
             |Escada == blocopos (posicao p) mapa = p {velocidade = (0,0), emEscada = False} :func fs
             |otherwise= p: func fs
 
---|atrinui movimentos aos fantasmas
+-- |atrinui movimentos aos fantasmas
 movfantescadas :: [Personagem] -> [Maybe Acao] 
 movfantescadas (p:ps)
     |velocidade p == (0,10) && emEscada p = Just Descer : movfantescadas ps
