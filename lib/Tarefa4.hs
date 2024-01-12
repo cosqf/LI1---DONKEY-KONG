@@ -23,16 +23,17 @@ atualiza listamov jogadormov Jogo {mapa= m, inimigos= i, colecionaveis= c, jogad
     jogador = movimentosM jogadormov j
     }
 
-allFantMov :: [Personagem] -> Mapa -> [Maybe Acao]   -- combina todas as funções de movimento relacionadas com os fantasmas
+--| combina todas as funções de movimento relacionadas com os fantasmas
+allFantMov :: [Personagem] -> Mapa -> [Maybe Acao]   
 allFantMov [] _ = []
 allFantMov p  m=
-  case (head (fantescadas p m), head (fantMov p)) of -- fantescada toma prioridade
+  case (head (fantescadas p m), head (fantMov p)) of --| fantescada toma prioridade
     (Just a, _)        -> Just a : allFantMov (tail p) m
     (Nothing , Just a) -> Just a : allFantMov (tail p) m
     _                  -> Nothing : allFantMov (tail p) m
 
-
-fantMov :: [Personagem] -> [Maybe Acao] --movimento aleatorio, fzr mais inteligente dps
+--|gera uma lista de ações aleatórias para os fantasmas
+fantMov :: [Personagem] -> [Maybe Acao] -- movimento aleatorio, fzr mais inteligente dps
 fantMov [] = []
 fantMov f = func (zip f (geraAleatorios 10 4))
     where
@@ -42,9 +43,10 @@ fantMov f = func (zip f (geraAleatorios 10 4))
             |even x = Just AndarDireita : func fs
             |otherwise = Just AndarEsquerda : func fs
 
-fantEscada :: [Personagem] -> Mapa -> [Personagem]   -- decidir se os fantasmas sobem a escada ou n
+--| decide se os fantasmas sobem as escadas ou não
+fantEscada :: [Personagem] -> Mapa -> [Personagem]   n
 fantEscada [] _ = []
-fantEscada f mapa= func (zip f x)                     -- fazer mais inteligente dps
+fantEscada f mapa= func (zip f x)           -- fazer mais inteligente dps
     where
         x= geraAleatorios 10 (length f)
         func :: [(Personagem, Int)] -> [Personagem]
@@ -57,11 +59,13 @@ fantEscada f mapa= func (zip f x)                     -- fazer mais inteligente 
             |Escada == blocopos (posicao p) mapa = p {velocidade = (0,0), emEscada = False} :func fs
             |otherwise= p: func fs
 
+--|atrinui movimentos aos fantasmas
 movfantescadas :: [Personagem] -> [Maybe Acao] 
 movfantescadas (p:ps)
     |velocidade p == (0,10) && emEscada p = Just Descer : movfantescadas ps
     |velocidade p == (0,-10) && emEscada p = Just Subir : movfantescadas ps
     |velocidade p == (0,0) && not (emEscada p) = Nothing : movfantescadas ps
+
 
 fantescadas :: [Personagem] -> Mapa -> [Maybe Acao]
 fantescadas p mapa = movfantescadas (fantEscada p mapa)
@@ -69,7 +73,8 @@ fantescadas p mapa = movfantescadas (fantEscada p mapa)
 -- adicionar função para decidir oq os fantasmas fazem dps de descer/subir a escada?
 
 
-movimentosM :: Maybe Acao -> Personagem -> Personagem -- definição dos movimentos andar, subir etc
+{-|implementa o movimento dos personagens, ver se ponho mais alguma coisa-}
+movimentosM :: Maybe Acao -> Personagem -> Personagem 
 movimentosM (Just AndarDireita) p@(Personagem {velocidade= (vx,vy)}) = 
     p {velocidade = (10,vy), direcao= Este}
 movimentosM (Just AndarEsquerda) p@(Personagem {velocidade= (vx,vy)}) = 
