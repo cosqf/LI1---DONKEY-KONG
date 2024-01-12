@@ -40,7 +40,7 @@ posicaoI (Personagem {posicao = pf}:xs) m@(Mapa (pm,_) _ _) = pf/=pm && posicaoI
 numI :: [Personagem] -> Bool    --numero de inimigos
 numI l = length l >=2 
 
--- | A função /iniVida/ confere se todos os fantasmas têm vida = 1
+-- | A função iniVida confere se todos os fantasmas têm vida = 1
 iniVida :: [Personagem] -> Bool
 iniVida = all vida
   where
@@ -49,28 +49,28 @@ iniVida = all vida
     vida (Personagem {tipo = _, vida = v}) = v == 1
 
 
---verificar se uma posição é do tipo Plataforma
+--| verificar se uma posição é do tipo Plataforma
 ehPlataforma :: Bloco -> Bool
 ehPlataforma Plataforma = True
 ehPlataforma _          = False
 
---verificar se uma posição é do tipo Alcapao
+--| verificar se uma posição é do tipo Alcapao
 ehAlcapao :: Bloco -> Bool
 ehAlcapao Alcapao = True
 ehAlcapao _       = False
 
-{-} Verifica se uma escada obedece às restrições, True indica que o mapa possui escadas válidas, e o valor False indica que não possui.-}
+{-| Verifica se uma escada obedece às restrições, True indica que o mapa possui escadas válidas, e o valor False indica que não possui.-}
 escadaValida :: Mapa -> Bool
 escadaValida (Mapa _ _ matriz) = all verificaEscada todasEscadas
   where
     todasEscadas = concatMap (separarEscadas . filter (== Escada)) matriz
-    -- divide uma lista de blocos em escadas
+    --| divide uma lista de blocos em escadas
     separarEscadas :: [Bloco] -> [[Bloco]]
     separarEscadas [] = []
     separarEscadas lista =
       let (escada, resto) = span (== Escada) lista
       in escada : separarEscadas (dropWhile (== Escada) resto)
-    -- verifica se a escada é válida
+    --| verifica se a escada é válida
     verificaEscada escada =
       case escada of
         [] -> False
@@ -78,13 +78,13 @@ escadaValida (Mapa _ _ matriz) = all verificaEscada todasEscadas
           (ehPlataforma s || ehPlataforma (last escada))
           && not (ehAlcapao s || ehAlcapao (last escada))
 
-    -- Encontrar todas as escadas na matriz
+    --| Encontrar todas as escadas na matriz
     escadas =
       concatMap (filter (== Escada)) matriz
 
 
 
--- | Verifica se a posição do jogador coincide com um bloco vazio.
+--| Verifica se a posição do jogador coincide com um bloco vazio.
 
 checkmario :: Personagem -> Mapa -> Bool
 checkmario mario mapa = 
@@ -93,41 +93,41 @@ checkmario mario mapa =
     Escada -> True
     _ -> False
 
--- | Verifica se a posição dos colecionáveis não coincide com nem uma plataforma, nem um alçapão.
+--| Verifica se a posição dos colecionáveis não coincide com nem uma plataforma, nem um alçapão.
 
 checkcolec :: [(Colecionavel, Posicao)] -> Mapa -> Bool
 checkcolec l mapa = notElem Plataforma pos &&  notElem Alcapao pos
   where pos = map (\(c, p) -> blocopos p mapa) l
 
--- provavelmente vai ser alterada
+--| provavelmente vai ser alterada
 criarPersonagem :: Velocidade -> Entidade -> Posicao -> Direcao -> (Double, Double) -> Int -> Int -> (Bool, Double) -> [[Bloco]] -> Maybe Personagem
 criarPersonagem vel ent pos dir tam vida pontos dano matrizBlocos =
   let tamanhoX = fst tam
       tamanhoY = snd tam
-      -- Verifica se o bloco na posição inicial do personagem é Vazio
+      --| Verifica se o bloco na posição inicial do personagem é Vazio
       blocoInicial = getBlocoNaPosicao pos matrizBlocos
   in if blocoInicial == Vazio &&
         all (\(x, y) -> getBlocoNaPosicao (x, y) matrizBlocos == Vazio) (posicoesBlocoPersonagem pos tam)
        then Just (Personagem vel ent pos dir tam False False vida pontos dano)
        else Nothing
 
--- talvez seja alterada
+--| talvez seja alterada
 criarColecionavel :: Colecionavel -> Posicao -> [[Bloco]] -> Maybe (Colecionavel, Posicao)
 criarColecionavel col pos matrizBlocos =
-  let -- Verifica se o bloco na posição inicial do colecionável é Vazio
+  let --| Verifica se o bloco na posição inicial do colecionável é Vazio
       blocoInicial = getBlocoNaPosicao pos matrizBlocos
   in if blocoInicial == Vazio
        then Just (col, pos)
        else Nothing
 
-{-verifica se algum bloco do mapa é um alçapão, e se o personagem cabe dentro deles-}
+{-|verifica se algum bloco do mapa é um alçapão, e se o personagem cabe dentro deles-}
 alcapaoL ::Mapa -> Personagem -> Bool
 alcapaoL (Mapa _ _ l) Personagem {tamanho=(x,y)}= notElem Alcapao (concat l) || all ((>= (ceiling x)) . length) (filter (elem Alcapao) (concat (map group l)))
     
 
 
 
--- Função auxiliar para obter o bloco na posição dada na matriz
+--| Função auxiliar para obter o bloco na posição dada na matriz
 getBlocoNaPosicao :: Posicao -> [[Bloco]] -> Bloco
 getBlocoNaPosicao (x, y) matrizBlocos =
   if 0 <= round y && round y < length matrizBlocos &&
@@ -135,7 +135,7 @@ getBlocoNaPosicao (x, y) matrizBlocos =
     then matrizBlocos !! round y !! round x
     else Vazio
 
--- Função auxiliar para obter as posições ocupadas por um bloco do tamanho dado
+--| Função auxiliar para obter as posições ocupadas por um bloco do tamanho dado
 posicoesBlocoPersonagem :: Posicao -> (Double, Double) -> [(Double, Double)]
 posicoesBlocoPersonagem (x, y) (tamanhoX, tamanhoY) =
   [(x', y') | x' <- [x, x + tamanhoX - 1], y' <- [y, y + tamanhoY - 1]]
@@ -156,21 +156,21 @@ blocos1 = [ [ Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vaz
           , [ Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma]]
 
 
--- Função para gerar um mapa aleatório com mais plataformas
+--| Função para gerar um mapa aleatório com mais plataformas
 geraMapaAleatorio :: Semente -> [[Bloco]]
 geraMapaAleatorio s = shuffleBlocos s blocos1
 
--- Função para embaralhar os blocos, mantendo algumas plataformas fixas
+--| Função para embaralhar os blocos, mantendo algumas plataformas fixas
 shuffleBlocos :: Semente -> [[Bloco]] -> [[Bloco]]
 shuffleBlocos s blocos =
   let blocoFixo = Escada  -- Escolha um bloco fixo (por exemplo, Plataforma)
-      matrizFixa = replicate 1 (replicate 10 blocoFixo)  -- Mantenha duas linhas fixas de plataformas que pode ser ajustado conforme necessário)
-      (blocosRestantes, _) = shuffle (mkStdGen s) $ concat $ filter (\row -> head row /= blocoFixo) blocos  -- os blocos que não são fixos
+      matrizFixa = replicate 1 (replicate 10 blocoFixo)  --| Mantenha duas linhas fixas de plataformas que pode ser ajustado conforme necessário)
+      (blocosRestantes, _) = shuffle (mkStdGen s) $ concat $ filter (\row -> head row /= blocoFixo) blocos  --| os blocos que não são fixos
       matrizEmbaralhada = matrizFixa ++ chunkList (length (head blocos)) blocosRestantes
   in matrizEmbaralhada
 
 
---Função para embaralhar uma lista com base em uma semente
+--| Função para embaralhar uma lista com base em uma semente
 shuffle :: RandomGen g => g -> [a] -> ([a], g)
 shuffle gen [] = ([], gen)
 shuffle gen xs =
@@ -178,18 +178,13 @@ shuffle gen xs =
       (ys, z:zs) = splitAt idx xs
   in (z : ys ++ zs, gen')
                
--- Função para dividir uma lista em sub-listas de tamanho específico
+--| Função para dividir uma lista em sub-listas de tamanho específico
 chunkList :: Int -> [a] -> [[a]]
 chunkList _ [] = []
 chunkList n xs = take n xs : chunkList n (drop n xs)
 
 
 {-
-chao :: Mapa -> Mapa
-chao (Mapa x y m) = Mapa x y (init m ++ [replicate (length (last m)) Plataforma]) --oq isto faz é subsituir a ultima linha da matriz do mapa por uma q tem apenas plataformas
-
-exemplo de mapa
-Mapa ((0.5, 5.5), Oeste) (0.5, 2.5) [[Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio],[Plataforma, Plataforma, Vazio, Vazio, Vazio, Vazio, Plataforma, Plataforma, Plataforma, Plataforma],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio],[Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio],[Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma]]
 
 1. O mapa tem “chão”, i.e. uma plataforma que impede que o jogador            chao
 ou outro personagem caia fora do mapa.
