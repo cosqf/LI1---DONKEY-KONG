@@ -4,27 +4,24 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 
 
-marioMovTeclas :: Event -> Jogo -> Maybe Acao
-marioMovTeclas (EventKey (SpecialKey KeyUp) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = True}  -> Just Subir
-    _                             -> Nothing
-marioMovTeclas (EventKey (SpecialKey KeyDown) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = True}  -> Just Descer
-    _                             -> Nothing
-marioMovTeclas (EventKey (SpecialKey KeyLeft) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = False} -> Just AndarEsquerda
-    _                             -> Nothing
-marioMovTeclas (EventKey (SpecialKey KeyRight) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = False} -> Just AndarDireita
-    _                             -> Nothing
-marioMovTeclas (EventKey (SpecialKey KeySpace) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = False, aplicaDano = (False, _)} -> Just Saltar
-    _                                                      -> Nothing
-marioMovTeclas _ _ = Just Parar
+data Estado = Estado 
+  {
+    modo :: Modo,
+    jogo :: Jogo,
+    tempo :: Tempo
+  }
+
+data Modo = EmJogo | MenuInicial MenuInicialOp | Pausa PausaOp | Mensagem MensagemOp | OpcoesOp
+
+data MenuInicialOp = Menu | Jogar | Sair | Opcoes
+
+data OpcoesOp = Skins 
+
+data PausaOp = VoltaMenu | RetomaJogo deriving (Show,Eq)
+
+data MensagemOp = Vitoria | Derrota
+  deriving (Show, Eq)
+
+
 
 

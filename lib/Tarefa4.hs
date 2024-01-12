@@ -10,7 +10,8 @@ module Tarefa4 where
 
 import Data.Maybe
 import LI12324
-import Tarefa3 (blocodirecao, blocopos)
+import Funcoes
+
 
 
 atualiza :: [Maybe Acao] -> Maybe Acao -> Jogo -> Jogo
@@ -73,14 +74,16 @@ movimentosM (Just AndarDireita) p@(Personagem {velocidade= (vx,vy)}) =
     p {velocidade = (10,vy), direcao= Este}
 movimentosM (Just AndarEsquerda) p@(Personagem {velocidade= (vx,vy)}) = 
     p {velocidade = (-10,vy), direcao= Oeste}
-movimentosM (Just Subir) (p) = p {velocidade = (0,-10), direcao= Norte}
-movimentosM (Just Descer) (p) = p {velocidade = (0,10), direcao= Sul}
+movimentosM (Just Subir) (p) = p {velocidade = (0,-10), direcao= Norte,emEscada=True}
+movimentosM (Just Descer) (p) = p {velocidade = (0,10), direcao= Sul, emEscada= True}
 movimentosM (Just Parar) (p) = p {velocidade = (0,0)} 
 movimentosM (Just Saltar) p@(Personagem {velocidade= (vx,vy)}) = 
     p {velocidade = (vx, -10)} 
+movimentosM Nothing p = p
 
 movimentos :: [Maybe Acao] -> [Personagem] -> [Personagem]
 movimentos ms ps = map (\(m, p) -> movimentosM m p) $ zip ms ps
+
 
 
 {-

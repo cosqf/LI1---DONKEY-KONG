@@ -10,12 +10,12 @@ module Tarefa3 where
 
 import LI12324
 import Tarefa1 
-import Data.List (elemIndices)
+import Funcoes
 
 movimenta :: Semente -> Tempo -> Jogo -> Jogo
 movimenta semente tempo Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j } =
     let
-        iniatualizado = multf velocidades. flip fantasmahit j . multf (flip colisao m) . multf (queda m (0,10))  $ i
+        iniatualizado = multf (flip ressaltacheck m) . multf velocidades. flip fantasmahit j . multf (flip colisao m) . multf (queda m (0,10))  $ i
         marioatualizado = velocidades. fantasmamortopontos i . jogadorhit i . flip removeMartelo  tempo. queda m (0,10) . flip colisao m . apanhacole c . flip removeMartelo tempo $ j
         colecatualizado = tiracole c j
         mapaatualizado = removeAlcapao j m
@@ -32,25 +32,25 @@ movimenta semente tempo Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= 
 fantasmahit :: [Personagem] -> Personagem -> [Personagem]          --recebe lista de inimigos e mario
 fantasmahit [] _ = []
 fantasmahit (f@(Personagem {tipo=Fantasma, vida= v}):fs) h
-    |overlap (hitboxMartelo h) (hitboxPersonagem f) = f {vida= v-1} : fantasmahit fs h      --se a hitbox tocar nas hitboxes do fantasma perde uma vida
+    |overlap' (hitboxMartelo h) (hitboxPersonagem f) = f {vida= v-1} : fantasmahit fs h      --se a hitbox tocar nas hitboxes do fantasma perde uma vida
     |otherwise= fantasmahit fs h
 
 {-calcula a hitbox do martelo do jogador,Se o personagem estiver virado para a direita, a função retorna um retângulo que se estende uma unidade para a direita do personagem.
 Se o personagem estiver virado para a esquerda, a função retorna um retângulo que se estende uma unidade para a esquerda do personagem.-}
-hitboxMartelo :: Personagem -> Hitbox
+hitboxMartelo :: Personagem -> Maybe Hitbox
 hitboxMartelo mario@(Personagem {posicao = (x, y), direcao = d,tamanho= (xt,yt),emEscada=False, aplicaDano = (True, t)}) = 
     let (w, h) = tamanho mario      --copiei o formato da tarefa 1
     in
         case d of
-            Este -> (((x-w/2)+xt, y-h/2), ((x+w/2)+xt, y+h/2)) --forma hitbox à direita do mario
-            Oeste -> (((x-w/2)-xt, y-h/2), ((x+w/2)-xt, y+h/2)) --forma hitbox à esquerda do mario
-            _ -> ((-5,-4),(-5,-4))
-hitboxMartelo _ = ((-5,-4),(-5,-4))
+            Este -> Just (((x-w/2)+xt, y-h/2), ((x+w/2)+xt, y+h/2)) --forma hitbox à direita do mario
+            Oeste -> Just (((x-w/2)-xt, y-h/2), ((x+w/2)-xt, y+h/2)) --forma hitbox à esquerda do mario
+            _ ->  Nothing
+hitboxMartelo _ = Nothing
 
 fantasmamortopontos ::[Personagem] -> Personagem-> Personagem  
 fantasmamortopontos [] m = m
 fantasmamortopontos (f@(Personagem {tipo=Fantasma, vida= v}):fs) mario@(Personagem{pontos = p})
-    |overlap (hitboxMartelo mario) (hitboxPersonagem f)= mario {pontos= p+500} -- mais 500 pontos
+    |overlap' (hitboxMartelo mario) (hitboxPersonagem f)= mario {pontos= p+500} -- mais 500 pontos
     |otherwise= fantasmamortopontos fs mario
 
 {-verifica se um personagem colide com o jogador,se um inimigo colidir com o jogador, o jogador perde uma vida-}
@@ -61,9 +61,6 @@ jogadorhit (x@(Personagem {vida=vf}):xs) mario@(Personagem{vida = v})
     |colisoesPersonagens x mario = mario {vida= v-1} --se sim tira uma vida
     |otherwise = jogadorhit xs mario
 
-
-gameover :: Personagem -> Bool --recebe vida e dá true ou false
-gameover Personagem {vida=v} = v == 0 --e verifica se é 0. se sim, n tem mais vida
 
 {-remove colecionáveis do mapa se o jogador colidir com eles-}
 tiracole :: [(Colecionavel, Posicao)] -> Personagem -> [(Colecionavel, Posicao)] 
@@ -98,7 +95,7 @@ queda mapa gravidade p
 {-remove um alçapão do mapa se o jogador estiver sobre ele e esse bloco é preenchido com um bloco vazio-}
 removeAlcapao :: Personagem -> Mapa -> Mapa
 removeAlcapao mario@(Personagem {posicao= (x,y), velocidade= (vx,vy)}) mapa@(Mapa a1 a2 l)
-    |blocodirecao mario Sul mapa == Alcapao = Mapa a1 a2 (troca (x,y+1) Vazio mapa)
+    |blocodirecao mario Sul mapa == Alcapao = Mapa a1 a2 (troca (fromIntegral (ceiling x),fromIntegral (ceiling y+1)) Vazio mapa)
     |vy/=0 && elem (x,y+2) (posb mapa Alcapao) = Mapa a1 a2 (troca (x,y+2) Vazio mapa)
     |otherwise = mapa
         where
@@ -128,6 +125,13 @@ velocidades p@Personagem{velocidade=(0,vy), posicao=(x,y)} =
 velocidades p@Personagem{velocidade=(vx,vy), posicao=(x,y)} = 
     p { posicao = (x + (vx / 10), y + (vy / 10)), velocidade = (0,0)}
 
+-- | Altera a direção dos personagens com "Ressalta" definida como True quando colidem com algo
+ressaltacheck :: Personagem -> Mapa -> Personagem
+ressaltacheck p@Personagem {ressalta= True, posicao= (x,y), velocidade= (vx,vy), direcao = d, tamanho= (tx,ty)} mapa=
+    case d of 
+        Este -> if blocopos (x+(tx/2),y-(ty/2)) mapa == Vazio ||blocopos (x+(tx/2),y) mapa == Plataforma then p {direcao= Oeste} else p
+        Oeste ->  if blocopos (x-(tx/2),y-(ty/2)) mapa == Vazio ||blocopos (x-(tx/2),y) mapa == Plataforma then p {direcao= Este} else p
+ressaltacheck p _ = p
 
 {-
 colisao :: [Personagem] -> Mapa -> [Personagem]
@@ -144,35 +148,9 @@ multf :: (a -> a) -> [a] -> [a]   -- esta função aplica outras funções a lis
 multf _ []     = []
 multf f (x:xs) = f x : multf f xs
 
-
-blocodirecao :: Personagem -> Direcao -> Mapa -> Bloco     --indica o bloco posicionado no lado norte/sul/etc do personagem
-blocodirecao (Personagem {posicao= (x,y)}) Norte mapa = blocopos (x,y-1) mapa
-blocodirecao (Personagem {posicao= (x,y)}) Sul mapa = blocopos (x,y+1) mapa
-blocodirecao (Personagem {posicao= (x,y)}) Oeste mapa = blocopos (x-1,y) mapa
-blocodirecao (Personagem {posicao= (x,y)}) Este mapa = blocopos (x+1,y) mapa
-
--- indica o bloco na coordenada (x,y)
-blocopos :: Posicao -> Mapa -> Bloco    
-blocopos (x, y) (Mapa _ _ mapa)
-    |y<0 || y>fromIntegral maxy=Vazio      -- se estiver fora do mapa dá vazio
-    |x<0 || x>fromIntegral maxx=Vazio
-    |x<1 && y<1 = fun x y
-    |x<1 = fun x (y-1)
-    |y<1 = fun (x-1) y
-    | otherwise = (mapa !! ceiling (y-1)) !! ceiling (x-1)
-        where
-            maxy = length mapa
-            maxx = length (head mapa)
-            fun x y = (mapa !! floor y) !! floor x
-        
---calcula todas as posicoes de um bloco no mapa
-posb :: Mapa -> Bloco -> [Posicao] 
-posb (Mapa _ _ l) b = aux (map (elemIndices b) l) 1.0
-  where
-    aux :: [[Int]] -> Double -> [Posicao]
-    aux [] _ = []
-    aux ([]:c) x = aux c (x + 1)
-    aux ((a:b):c) x = (x, fromIntegral a) : aux (b:c) x
+overlap' :: Maybe Hitbox -> Hitbox -> Bool -- mesmo que overlap mas aceita Maybe Hitbox
+overlap' Nothing _ = False
+overlap' (Just ((x1, y1), (x2, y2))) ((x3, y3), (x4, y4)) = x1 <= x4 && x2 >= x3 && y1 <= y4 && y2 >= y3
 
 -- função auxiliar que verifica se duas hitboxes estão colidindo
 colisoesHitB :: Posicao -> Posicao -> Bool

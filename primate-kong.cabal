@@ -52,6 +52,9 @@ library
         Tarefa4
         Tarefa5
         Imagens
+        Funcoes
+        Desenha
+        Reage
 
     -- Modules included in this library but not exported.
     -- other-modules:

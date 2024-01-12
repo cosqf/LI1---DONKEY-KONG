@@ -8,7 +8,7 @@ Módulo para a realização da Tarefa 2 de LI1 em 2023/24.
 -}
 module Tarefa2 where
 import Tarefa1 (colisoesPersonagens)
-import Tarefa3 (blocopos)
+import Funcoes
 import LI12324
 import Data.List (group)
 
