@@ -28,71 +28,71 @@ movimenta semente tempo Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= 
             jogador = marioatualizado
         }
 
-{-verifica se um fantasma colide com um martelo, se a hitbox do martelo estiver sobreposta à hitboxdo fantasma, a vida do fantasma é atualizada e a lista é atualizada, caso não aconteça a lista fica igual-}
-fantasmahit :: [Personagem] -> Personagem -> [Personagem]          --recebe lista de inimigos e mario
+{-|verifica se um fantasma colide com um martelo, se a hitbox do martelo estiver sobreposta à hitboxdo fantasma, a vida do fantasma é atualizada e a lista é atualizada, caso não aconteça a lista fica igual-}
+fantasmahit :: [Personagem] -> Personagem -> [Personagem]          --|recebe lista de inimigos e mario
 fantasmahit [] _ = []
 fantasmahit (f@(Personagem {tipo=Fantasma, vida= v}):fs) h
-    |overlap' (hitboxMartelo h) (hitboxPersonagem f) = f {vida= v-1} : fantasmahit fs h      --se a hitbox tocar nas hitboxes do fantasma perde uma vida
+    |overlap' (hitboxMartelo h) (hitboxPersonagem f) = f {vida= v-1} : fantasmahit fs h      --|se a hitbox tocar nas hitboxes do fantasma perde uma vida
     |otherwise= fantasmahit fs h
 
-{-calcula a hitbox do martelo do jogador,Se o personagem estiver virado para a direita, a função retorna um retângulo que se estende uma unidade para a direita do personagem.
-Se o personagem estiver virado para a esquerda, a função retorna um retângulo que se estende uma unidade para a esquerda do personagem.-}
+{-|calcula a hitbox do martelo do jogador,Se o personagem estiver virado para a direita, a função retorna um retângulo que se estende uma unidade para a direita do personagem.
+Se o personagem estiver virado para a esquerda, a função retorna um retângulo que se estende uma unidade para a esquerda do personagem-}
 hitboxMartelo :: Personagem -> Maybe Hitbox
 hitboxMartelo mario@(Personagem {posicao = (x, y), direcao = d,tamanho= (xt,yt),emEscada=False, aplicaDano = (True, t)}) = 
     let (w, h) = tamanho mario      --copiei o formato da tarefa 1
     in
         case d of
-            Este -> Just (((x-w/2)+xt, y-h/2), ((x+w/2)+xt, y+h/2)) --forma hitbox à direita do mario
-            Oeste -> Just (((x-w/2)-xt, y-h/2), ((x+w/2)-xt, y+h/2)) --forma hitbox à esquerda do mario
+            Este -> Just (((x-w/2)+xt, y-h/2), ((x+w/2)+xt, y+h/2)) --|forma hitbox à direita do mario
+            Oeste -> Just (((x-w/2)-xt, y-h/2), ((x+w/2)-xt, y+h/2)) --|forma hitbox à esquerda do mario
             _ ->  Nothing
 hitboxMartelo _ = Nothing
 
 fantasmamortopontos ::[Personagem] -> Personagem-> Personagem  
 fantasmamortopontos [] m = m
 fantasmamortopontos (f@(Personagem {tipo=Fantasma, vida= v}):fs) mario@(Personagem{pontos = p})
-    |overlap' (hitboxMartelo mario) (hitboxPersonagem f)= mario {pontos= p+500} -- mais 500 pontos
+    |overlap' (hitboxMartelo mario) (hitboxPersonagem f)= mario {pontos= p+500} --| mais 500 pontos
     |otherwise= fantasmamortopontos fs mario
 
-{-verifica se um personagem colide com o jogador,se um inimigo colidir com o jogador, o jogador perde uma vida-}
-jogadorhit ::[Personagem] -> Personagem -> Personagem --verifica se a colisao de personagens com o mario acontece
+{-|verifica se um personagem colide com o jogador,se um inimigo colidir com o jogador, o jogador perde uma vida-}
+jogadorhit ::[Personagem] -> Personagem -> Personagem --|verifica se a colisao de personagens com o mario acontece
 jogadorhit [] m = m
 jogadorhit (x@(Personagem {vida=vf}):xs) mario@(Personagem{vida = v})
     |vf == 0 = jogadorhit xs mario
-    |colisoesPersonagens x mario = mario {vida= v-1} --se sim tira uma vida
+    |colisoesPersonagens x mario = mario {vida= v-1} --|se sim tira uma vida
     |otherwise = jogadorhit xs mario
 
 
-{-remove colecionáveis do mapa se o jogador colidir com eles-}
+{-|remove colecionáveis do mapa se o jogador colidir com eles-}
 tiracole :: [(Colecionavel, Posicao)] -> Personagem -> [(Colecionavel, Posicao)] 
 tiracole [] mario = []
 tiracole ((c,x):t) mario
-    |colisoesHitB x (posicao mario) = tiracole t mario --remove do mapa os colecionaveis
+    |colisoesHitB x (posicao mario) = tiracole t mario --|remove do mapa os colecionaveis
     |otherwise= (c,x):t
 
-{-coleta coleccionável e atribui recompensas-}
+{-|coleta coleccionável e atribui recompensas-}
 apanhacole:: [(Colecionavel, Posicao)] -> Personagem -> Personagem
 apanhacole [] mario = mario
-apanhacole (((Moeda,x):t)) mario@(Personagem {pontos = p}) --verifica se a posicao da moeda é igual à do mario
-    |colisoesHitB x (posicao mario) = mario {pontos= p + 500} --se sim recebe 500 pontos 
+apanhacole (((Moeda,x):t)) mario@(Personagem {pontos = p}) --|verifica se a posicao da moeda é igual à do mario
+    |colisoesHitB x (posicao mario) = mario {pontos= p + 500} --|se sim recebe 500 pontos 
     |otherwise = apanhacole t mario -- se n continua a verificar 
 apanhacole (((Martelo,x):t)) mario@(Personagem {aplicaDano=(b,d)})
-    |colisoesHitB x (posicao mario) = mario{aplicaDano =(True,10)} --se a posicao do mario for igual à do martelo, o mario recebe a condição de dar dano
-    |otherwise = apanhacole t mario --atenção o tempo n está definido ainda
+    |colisoesHitB x (posicao mario) = mario{aplicaDano =(True,10)} --|se a posicao do mario for igual à do martelo, o mario recebe a condição de dar dano
+    |otherwise = apanhacole t mario --|atenção o tempo n está definido ainda
 
-{-remove o martelo do jogador se o tempo de duração do martelo acabar-}
-removeMartelo :: Personagem -> Tempo -> Personagem --recebe o tempo e verifica se o tempo do martelo está a zero
+{-|remove o martelo do jogador se o tempo de duração do martelo acabar-}
+removeMartelo :: Personagem -> Tempo -> Personagem --|recebe o tempo e verifica se o tempo do martelo está a zero
 removeMartelo mario@(Personagem {aplicaDano = (False,0)}) t = mario
 removeMartelo mario@(Personagem {aplicaDano = (True , m)}) t
     |t - m == t = mario {aplicaDano = (False, 0)}
     |otherwise= mario {aplicaDano = (True, m-1)}
 
--- atualiza a velocidade e a direção do jogador para que ele caia
-queda :: Mapa -> Velocidade -> Personagem-> Personagem         -- velocidade fica igual à gravidade e a direção a sul
+--| atualiza a velocidade e a direção do jogador para que ele caia
+queda :: Mapa -> Velocidade -> Personagem-> Personagem         --| velocidade fica igual à gravidade e a direção a sul
 queda mapa gravidade p
     |blocodirecao p Sul mapa == Vazio = p {velocidade= gravidade, direcao = Sul}
     |otherwise = p
 
-{-remove um alçapão do mapa se o jogador estiver sobre ele e esse bloco é preenchido com um bloco vazio-}
+{-|remove um alçapão do mapa se o jogador estiver sobre ele e esse bloco é preenchido com um bloco vazio-}
 removeAlcapao :: Personagem -> Mapa -> Mapa
 removeAlcapao mario@(Personagem {posicao= (x,y), velocidade= (vx,vy)}) mapa@(Mapa a1 a2 l)
     |blocodirecao mario Sul mapa == Alcapao = Mapa a1 a2 (troca (fromIntegral (ceiling x),fromIntegral (ceiling y+1)) Vazio mapa)
@@ -109,14 +109,14 @@ removeAlcapao mario@(Personagem {posicao= (x,y), velocidade= (vx,vy)}) mapa@(Map
             auxTroca (1,1) b h = b:tail h
             auxTroca (x,1) b (h:t) = h: auxTroca (x-1,1) b t
 
---verifica se um personagem colide com alguma coisa no mapa
+--|verifica se um personagem colide com alguma coisa no mapa
 colisao :: Personagem -> Mapa -> Personagem
 colisao p m
     |colisoesParede m p =  p{velocidade=(0,0)}
     |otherwise = p
 
---atualiza a posição de um personagem de acordo com sua velocidade
-velocidades :: Personagem -> Personagem -- relacionar a velocidade com a posicao
+--|atualiza a posição de um personagem de acordo com sua velocidade
+velocidades :: Personagem -> Personagem --| relacionar a velocidade com a posicao
 velocidades p@Personagem{velocidade=(0,0), posicao=(x,y)} = p
 velocidades p@Personagem{velocidade=(vx, 0), posicao=(x,y)} = 
     p { posicao = (x + (vx / 10), y), velocidade = (0,0)}
@@ -141,18 +141,17 @@ colisao (p@(Personagem {posicao = (x,y)}) :ps) mapa@(Mapa _ _ l)
     |otherwise = colisao ps mapa
 -}
 
+ 
 
--- funções uteis 
-
-multf :: (a -> a) -> [a] -> [a]   -- esta função aplica outras funções a listas de elementos ao inves de apenas um
+multf :: (a -> a) -> [a] -> [a]   --| esta função aplica outras funções a listas de elementos ao inves de apenas um
 multf _ []     = []
 multf f (x:xs) = f x : multf f xs
 
-overlap' :: Maybe Hitbox -> Hitbox -> Bool -- mesmo que overlap mas aceita Maybe Hitbox
+overlap' :: Maybe Hitbox -> Hitbox -> Bool --| mesmo que overlap mas aceita Maybe Hitbox
 overlap' Nothing _ = False
 overlap' (Just ((x1, y1), (x2, y2))) ((x3, y3), (x4, y4)) = x1 <= x4 && x2 >= x3 && y1 <= y4 && y2 >= y3
 
--- função auxiliar que verifica se duas hitboxes estão colidindo
+--| função auxiliar que verifica se duas hitboxes estão colidindo
 colisoesHitB :: Posicao -> Posicao -> Bool
 colisoesHitB (x,y) (z,w)=
   let hitboxP1 = ((x - 1/2, y - 1/2), (x + 1/2, y + 1/2))
