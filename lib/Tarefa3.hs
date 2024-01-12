@@ -12,6 +12,7 @@ import LI12324
 import Tarefa1 
 import Funcoes
 
+{-|atualiza o estado do jogo, de acordo com o tempo especificado, atualiza a posição dos personagens,dos colecionaveis, tal como os pontos de vida dos personagens-}
 movimenta :: Semente -> Tempo -> Jogo -> Jogo
 movimenta semente tempo Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j } =
     let
