@@ -12,14 +12,14 @@ import LI12324
 
 
 
---  Calcula a hitbox de um personagem.
+--|  Calcula a hitbox de um personagem.
 hitboxPersonagem :: Personagem -> Hitbox
 hitboxPersonagem p = let (x, y) = posicao p
                          (w, h) = tamanho p
                      in  ((x - w/2, y - h/2), (x + w/2, y + h/2))
 
 
-{-Testa se um personagem colide com as paredes ou plataformas do mapa.
+{-|Testa se um personagem colide com as paredes ou plataformas do mapa.
 O valor True indica que o personagem colidiu com alguma parede ou plataforma, e o valor False indica que não houve colisão-}
 colisoesParede :: Mapa -> Personagem -> Bool
 colisoesParede (Mapa _ _ blocos) personagem =
@@ -30,16 +30,16 @@ colisoesParede (Mapa _ _ blocos) personagem =
       (mapWidth, mapHeight) = (fromIntegral $ length (head blocos), fromIntegral $ length blocos)
       (blocoX, blocoY) = (floor posX, floor posY)
   in
-    -- Verifica colisão com paredes laterais
+    --| Verifica colisão com paredes laterais
     posX - width/2 < 0 || posX + width/2 > mapWidth ||
-    -- Verifica colisão com o topo do mapa
+    --| Verifica colisão com o topo do mapa
     posY + height/2 > mapHeight ||
-    -- Verifica colisão com plataformas
+    --| Verifica colisão com plataformas
     case safeGet blocoX blocoY blocos of
       Just Plataforma -> posY - height/2 < fromIntegral blocoY + blocoH
       _               -> False
 
-{-Função auxiliar para obter um elemento de uma matriz com verificação de limites
+{-| Função auxiliar para obter um elemento de uma matriz com verificação de limites
 Ela retorna o elemento da matriz na linha e coluna especificadas, ou Nothing se a linha ou coluna estiver fora dos limites da matriz-}
 safeGet :: Int -> Int -> [[a]] -> Maybe a
 safeGet x y m =
@@ -49,7 +49,7 @@ safeGet x y m =
 
 
 
-{-Testa se dois 'Personagens' colidem, True indica que os personagens colidiram, e o valor False indica que não houve colisão-}
+{-|Testa se dois 'Personagens' colidem, True indica que os personagens colidiram, e o valor False indica que não houve colisão-}
 colisoesPersonagens :: Personagem -> Personagem -> Bool
 colisoesPersonagens p1 p2 =
   let hitboxP1 = hitboxPersonagem p1
@@ -57,7 +57,7 @@ colisoesPersonagens p1 p2 =
   in
     overlap hitboxP1 hitboxP2
 
-{-Função auxiliar que verifica se duas hitboxes se sobrepõem, o valor True indica que as hitboxes se sobrepõem, e o valor False indica que não se sobrepõem-}
+{-|Função auxiliar que verifica se duas hitboxes se sobrepõem, o valor True indica que as hitboxes se sobrepõem, e o valor False indica que não se sobrepõem-}
 overlap :: Hitbox -> Hitbox -> Bool
 overlap ((x1, y1), (x2, y2)) ((x3, y3), (x4, y4)) =
   x1 < x4 && x2 > x3 && y1 < y4 && y2 > y3
