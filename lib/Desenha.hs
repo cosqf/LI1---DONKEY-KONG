@@ -16,10 +16,10 @@ desenha estado@Estado {modo= modo} = case modo of
   --OpcoesOp
 
 desenhaMenu :: Estado -> IO Picture
-desenhaMenu Estado {modo = MenuInicial Menu} = menu
-desenhaMenu Estado {modo = MenuInicial Jogar} = menujogar
-desenhaMenu Estado {modo = MenuInicial Sair} = menusair
-desenhaMenu Estado {modo = MenuInicial Opcoes} = menuopcoes
+desenhaMenu Estado {modo = MenuInicial Menu, imagens= imgs} = obterimagem "menu" imgs
+desenhaMenu Estado {modo = MenuInicial Jogar, imagens= imgs} = obterimagem "menujogar" imgs
+desenhaMenu Estado {modo = MenuInicial Sair, imagens= imgs} = obterimagem "menusair" imgs
+desenhaMenu Estado {modo = MenuInicial Opcoes, imagens= imgs} = obterimagem "menuopcoes" imgs
 desenhaMenu Estado {modo = Pausa RetomaJogo} =
   return $ Pictures [Color blue opcaoRetomaJogo, Color white opcaoSair]
 desenhaMenu Estado {modo = Pausa VoltaMenu} =
@@ -45,53 +45,53 @@ desenhaMensagem op =
 
 
 desenhaJogador:: Estado -> IO Picture
-desenhaJogador Estado {modo= EmJogo, tempo= t, jogo= Jogo {jogador=
+desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
   Personagem {velocidade= (0,0), posicao = pos, direcao=dir, tamanho= tam, emEscada= False, aplicaDano= (False, d)},mapa = mapa}} =
     let tamcomp = tamanhoCompMapa mapa
-    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ marioparado
-desenhaJogador Estado {modo= EmJogo, tempo= t, jogo= Jogo {jogador=
+    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ obterimagem "marioparado" imgs
+desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
   Personagem {velocidade= (0,0), posicao = pos, direcao=dir, tamanho= tam, emEscada= False, aplicaDano= (True, d)}, mapa = mapa}} =
     let tamcomp = tamanhoCompMapa mapa
     in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
-                                                                                           mariomarteloup
-                                                                                           else mariomartelodown
-desenhaJogador Estado {modo= EmJogo, tempo= t, jogo= Jogo {jogador=
+                                                                                           obterimagem "mariomarteloup" imgs
+                                                                                           else obterimagem "mariomartelodown" imgs
+desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
   Personagem {posicao = pos, direcao=dir, tamanho= tam, emEscada= False, aplicaDano= (False, d)},mapa = mapa}} =
     let tamcomp = tamanhoCompMapa mapa
     in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
-                                                                                            marioanda1
-                                                                                            else marioanda2
-desenhaJogador Estado {modo= EmJogo, tempo= t, jogo= Jogo {jogador=
+                                                                                           obterimagem "marioanda1" imgs
+                                                                                            else obterimagem "marioanda2" imgs
+desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
   Personagem {posicao = pos, direcao=dir, tamanho= tam, emEscada= False, aplicaDano= (True, d)},mapa = mapa}} =
     let tamcomp = tamanhoCompMapa mapa
     in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
-                                                                                            mariomarteloupanda
-                                                                                            else mariomarteloandadown
-desenhaJogador Estado {modo= EmJogo, tempo= t, jogo= Jogo {jogador=
+                                                                                           obterimagem "mariomarteloupanda" imgs
+                                                                                            else obterimagem "mariomarteloandadown" imgs
+desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
   Personagem {posicao = pos, direcao=dir, tamanho= tam, emEscada= True, aplicaDano= (False, d)},mapa = mapa}} =
     let tamcomp = tamanhoCompMapa mapa
     in translateParaPos pos tamcomp . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
-                                                                              mariosubir
-                                                                              else turnEste Este marioanda2
+                                                                            obterimagem "mariosubir" imgs
+                                                                              else turnEste Este (obterimagem "marioanda2" imgs)
 
 -- falta morte
 
 desenhaColec :: Estado -> IO [Picture] 
-desenhaColec Estado {modo = EmJogo, jogo = Jogo {colecionaveis = l,mapa= mapa}} = 
+desenhaColec Estado {modo = EmJogo, imagens= imgs, jogo = Jogo {colecionaveis = l,mapa= mapa}} = 
   let 
     t = tamanhoCompMapa mapa
   in
     mapM (\(c, pos) -> case c of                  --mapM converte a função de [IO Picture] para IO [Picture]
-                        Martelo -> translateParaPos pos t martelo
-                        Moeda   -> translateParaPos pos t coin) l
+                        Martelo -> translateParaPos pos t (obterimagem "martelo" imgs)
+                        Moeda   -> translateParaPos pos t ( obterimagem "coin" imgs)) l
 
 
 desenhaFantasmas :: Estado -> IO [Picture]
-desenhaFantasmas Estado {modo = EmJogo, jogo = Jogo {inimigos = l, mapa = mapa}, tempo = temp} =
+desenhaFantasmas Estado {modo = EmJogo,imagens=imgs, jogo = Jogo {inimigos = l, mapa = mapa}, tempo = temp} =
   let
     t = tamanhoCompMapa mapa
     isFantasma1 = mod (round temp) 2 == 0
-    getFantasmaPic = if isFantasma1 then fantasma1 else fantasma2
+    getFantasmaPic = if isFantasma1 then obterimagem "fantasma1" imgs else obterimagem "fantasma2" imgs
   in
     mapM (\Personagem
             { posicao = pos
@@ -118,7 +118,7 @@ blockSize = 80
 
 
 mapapicture :: Estado -> IO Picture
-mapapicture e@(Estado {jogo = Jogo {mapa= mapa}}) = do
+mapapicture e@(Estado {jogo = Jogo {mapa= mapa}, imagens= imgs}) = do
     let 
       (mapWidth, mapHeight) = tamanhoCompMapa mapa
       mapToPicture :: Estado -> IO Picture
@@ -133,9 +133,9 @@ mapapicture e@(Estado {jogo = Jogo {mapa= mapa}}) = do
 
       blockPicture :: Bloco -> IO Picture
       blockPicture Vazio = return $ Color black $ rectangleSolid blockSize blockSize
-      blockPicture Plataforma = plataforma
-      blockPicture Escada = escada
-      blockPicture Alcapao = alcapao          
+      blockPicture Plataforma = obterimagem "plataforma" imgs
+      blockPicture Escada = obterimagem "escada" imgs
+      blockPicture Alcapao = obterimagem "alcapao" imgs          
 
     mapaPic <- mapToPicture e
     return $ Translate (-mapWidth/2 + blockSize/2) (mapHeight/2 - blockSize/2) mapaPic

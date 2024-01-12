@@ -68,14 +68,13 @@ getImages = do
     ("plataforma",plataforma)
     ]
 
-obterimagem :: String -> IO Imagem -> IO Picture
+obterimagem :: String -> Imagem -> IO Picture
 obterimagem n imgs = do
-  images <- imgs
-  case lookup n images of
+  case lookup n imgs of
     Just img -> return img
     Nothing  -> error ""
 
-
+{-
 marioanda1 = obterimagem "marioanda1" getImages
 marioanda2 = obterimagem "marioanda2" getImages
 mariomarteloandadown = obterimagem "mariomarteloandadown" getImages
@@ -103,3 +102,5 @@ menusair = obterimagem "menusair" getImages
 alcapao = obterimagem "alcapao" getImages
 escada = obterimagem "escada" getImages
 plataforma = obterimagem "plataforma" getImages
+
+-}

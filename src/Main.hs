@@ -7,6 +7,7 @@ import Tarefa3 (movimenta)
 import Desenha (desenha)
 import Reage (reageEvento)
 import Tarefa5
+import Imagens (getImages)
 
 janela :: Display
 janela = InWindow
@@ -25,18 +26,14 @@ tempof _ e@(Estado {modo= MenuInicial _}) = return e {tempo= 0}
 tempof t e = return $ e {jogo = movimenta 100 (realToFrac t) (jogo e)}
 
 
-estadoInicial = Estado
-  { modo = MenuInicial Menu
-  , jogo = jogo01
-  , tempo = 0
-  }
 
 main :: IO ()
 main = do
   --if valida $ jogo estadoInicial 
     --then do
+      images <- getImages
       putStrLn "Jogo válido\nA carregar..."
-      playIO janela corFundo fr estadoInicial desenha reageEvento tempof
+      playIO janela corFundo fr (Estado {modo= MenuInicial Menu, jogo= jogo01, tempo= 0, imagens= images}) desenha reageEvento tempof
   --  else do
     --  putStrLn "Jogo inválido"
 
