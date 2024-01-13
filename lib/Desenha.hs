@@ -52,27 +52,27 @@ desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
 desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
   Personagem {velocidade= (0,0), posicao = pos, direcao=dir, tamanho= tam, emEscada= False, aplicaDano= (True, d)}, mapa = mapa}} =
     let tamcomp = tamanhoCompMapa mapa
-    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if even (round t) then
                                                                                            obterimagem "mariomarteloup" imgs
                                                                                            else obterimagem "mariomartelodown" imgs
 desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
   Personagem {posicao = pos, direcao=dir, tamanho= tam, emEscada= False, aplicaDano= (False, d)},mapa = mapa}} =
     let tamcomp = tamanhoCompMapa mapa
-    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if even (round t) then
                                                                                            obterimagem "marioanda1" imgs
                                                                                             else obterimagem "marioanda2" imgs
 desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
   Personagem {posicao = pos, direcao=dir, tamanho= tam, emEscada= False, aplicaDano= (True, d)},mapa = mapa}} =
     let tamcomp = tamanhoCompMapa mapa
-    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if even (round t) then
                                                                                            obterimagem "mariomarteloupanda" imgs
                                                                                             else obterimagem "mariomarteloandadown" imgs
 desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
   Personagem {posicao = pos, direcao=dir, tamanho= tam, emEscada= True, aplicaDano= (False, d)},mapa = mapa}}
-  |blocopos pos mapa == Vazio = translateParaPos pos tamcomp . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+  |blocopos pos mapa == Vazio = translateParaPos pos tamcomp . tamanhoscale tam $ if even (round t) then
                                                                             obterimagem "mariosubirfim" imgs
                                                                               else obterimagem "mariosubir3" imgs                                                                           
-  |otherwise= translateParaPos pos tamcomp . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+  |otherwise= translateParaPos pos tamcomp . tamanhoscale tam $ if even (round t) then
                                                                             obterimagem "mariosubir" imgs
                                                                               else turnEste Este (obterimagem "mariosubir" imgs)
     where tamcomp = tamanhoCompMapa mapa
@@ -93,7 +93,7 @@ desenhaFantasmas :: Estado -> IO [Picture]
 desenhaFantasmas Estado {modo = EmJogo,imagens=imgs, jogo = Jogo {inimigos = l, mapa = mapa}, tempo = temp} =
   let
     t = tamanhoCompMapa mapa
-    isFantasma1 = mod (round temp) 2 == 0
+    isFantasma1 = even (round temp) 
     getFantasmaPic = if isFantasma1 then obterimagem "fantasma1" imgs else obterimagem "fantasma2" imgs
   in
     mapM (\Personagem

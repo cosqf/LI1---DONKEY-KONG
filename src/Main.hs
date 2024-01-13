@@ -19,7 +19,7 @@ janela = InWindow
 corFundo = black
 
 fr:: Int
-fr = 60
+fr = 25
 
 tempof :: Float -> Estado -> IO Estado
 tempof _ e@(Estado {modo= Pausa _}) = return e

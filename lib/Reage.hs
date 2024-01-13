@@ -71,24 +71,28 @@ reageMensagem _ estado e@Estado {modo = modo} = return (e{modo=Mensagem estado})
 
 
 marioMovTeclas :: Event -> Jogo -> Maybe Acao
-marioMovTeclas (EventKey (SpecialKey KeyUp) Down _ _) (Jogo {mapa= mapa,  jogador= p})
+marioMovTeclas (EventKey (SpecialKey KeyUp) Down _ _) (Jogo {mapa= mapa, jogador= p@(Personagem {posicao= (x,y)})})
   |emEscada p = Just Subir 
-  |emEscada p && blocopos (posicao p) mapa == Plataforma = Just Subir
+  |emEscada p && blocopos (x,y-0.5 )mapa == Plataforma = Just Subir
   |blocopos (posicao p) mapa == Escada && not (fst (aplicaDano p)) = Just Subir
   |otherwise= Just Parar 
+marioMovTeclas (EventKey (SpecialKey KeyUp) Up _ _) j = Just Parar
 marioMovTeclas (EventKey (SpecialKey KeyDown) Down _ _) (Jogo {mapa= mapa, jogador= p@(Personagem {posicao= (x,y)})})
   |emEscada p && blocodirecao p Sul mapa/= Plataforma = Just Descer 
-  |emEscada p && blocopos (x,y) mapa == Plataforma = Just Descer
+  |emEscada p && blocopos (x,y) mapa == Plataforma = if blocopos (x,y+2) mapa == Escada then Just Descer else Just Parar
   |blocopos (x,y+2) mapa == Escada && not (fst (aplicaDano p)) = Just Descer
   |otherwise= Just Parar 
+marioMovTeclas (EventKey (SpecialKey KeyDown) Up _ _) j = Just Parar
 marioMovTeclas (EventKey (SpecialKey KeyLeft) Down _ _) (Jogo {mapa= mapa,  jogador= p})
   |emEscada p && blocodirecao p Sul mapa== Plataforma = Just AndarEsquerda
   |not (emEscada p) = Just AndarEsquerda
   |otherwise= Just Parar 
+marioMovTeclas (EventKey (SpecialKey KeyLeft) Up _ _) j = Just Parar
 marioMovTeclas (EventKey (SpecialKey KeyRight) Down _ _) (Jogo {mapa= mapa,  jogador= p})
   |emEscada p && blocodirecao p Sul mapa== Plataforma = Just AndarDireita
   |not (emEscada p) = Just AndarDireita
   |otherwise= Just Parar 
+marioMovTeclas (EventKey (SpecialKey KeyRight) Up _ _) j = Just Parar
 marioMovTeclas (EventKey (SpecialKey KeySpace) Down _ _) (Jogo {mapa= mapa,  jogador= p})
   |emEscada p || fst (aplicaDano p) = Just Parar
   |otherwise = Just Saltar
