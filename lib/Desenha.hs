@@ -4,7 +4,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import Imagens
 import Tarefa5
-
+import Funcoes
 
 
 desenha :: Estado -> IO Picture
@@ -35,12 +35,12 @@ desenhaMensagem op =
   return $
     Pictures
       [ Translate (-150) 100 $ Color blue $ mensagem,
-        Translate (-150) (-100) $ Text "Pressione Enter para retornar ao menu"
+        Translate (-850) (-100) $ Text "Pressione Enter para retornar ao menu"
       ]
   where
     mensagem = case op of
-      Vitoria -> Text "Parabéns! Você venceu!"
-      Derrota -> Text "Você perdeu. Tente novamente."
+      Vitoria -> Text "Parabéns! Venceu!"
+      Derrota -> Text "Perdeu"
 
 
 
@@ -52,28 +52,31 @@ desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
 desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
   Personagem {velocidade= (0,0), posicao = pos, direcao=dir, tamanho= tam, emEscada= False, aplicaDano= (True, d)}, mapa = mapa}} =
     let tamcomp = tamanhoCompMapa mapa
-    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if even (round t) then
                                                                                            obterimagem "mariomarteloup" imgs
                                                                                            else obterimagem "mariomartelodown" imgs
 desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
   Personagem {posicao = pos, direcao=dir, tamanho= tam, emEscada= False, aplicaDano= (False, d)},mapa = mapa}} =
     let tamcomp = tamanhoCompMapa mapa
-    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if even (round t) then
                                                                                            obterimagem "marioanda1" imgs
                                                                                             else obterimagem "marioanda2" imgs
 desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
   Personagem {posicao = pos, direcao=dir, tamanho= tam, emEscada= False, aplicaDano= (True, d)},mapa = mapa}} =
     let tamcomp = tamanhoCompMapa mapa
-    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+    in translateParaPos pos tamcomp . turnEste dir . tamanhoscale tam $ if even (round t) then
                                                                                            obterimagem "mariomarteloupanda" imgs
                                                                                             else obterimagem "mariomarteloandadown" imgs
 desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
-  Personagem {posicao = pos, direcao=dir, tamanho= tam, emEscada= True, aplicaDano= (False, d)},mapa = mapa}} =
-    let tamcomp = tamanhoCompMapa mapa
-    in translateParaPos pos tamcomp . tamanhoscale tam $ if (mod (round (t*1000)) 200) < 100 then
+  Personagem {posicao = pos, direcao=dir, tamanho= tam, emEscada= True}, mapa = mapa}}
+  |blocopos pos mapa == Vazio = translateParaPos pos tamcomp . tamanhoscale tam $ if even (round t) then
+                                                                            obterimagem "mariosubirfim" imgs
+                                                                              else obterimagem "mariosubir3" imgs                                                                           
+  |otherwise= translateParaPos pos tamcomp . tamanhoscale tam $ if even (round t) then
                                                                             obterimagem "mariosubir" imgs
-                                                                              else turnEste Este (obterimagem "marioanda2" imgs)
-
+                                                                              else turnEste Este (obterimagem "mariosubir" imgs)
+    where tamcomp = tamanhoCompMapa mapa
+    
 -- falta morte
 
 desenhaColec :: Estado -> IO [Picture] 
@@ -87,17 +90,20 @@ desenhaColec Estado {modo = EmJogo, imagens= imgs, jogo = Jogo {colecionaveis = 
 
 
 desenhaFantasmas :: Estado -> IO [Picture]
-desenhaFantasmas Estado {modo = EmJogo,imagens=imgs, jogo = Jogo {inimigos = l, mapa = mapa}, tempo = temp} =
-  let
-    t = tamanhoCompMapa mapa
-    isFantasma1 = mod (round temp) 2 == 0
-    getFantasmaPic = if isFantasma1 then obterimagem "fantasma1" imgs else obterimagem "fantasma2" imgs
-  in
-    mapM (\Personagem
-            { posicao = pos
-            , direcao = dir
-            , tamanho = tam
-            } -> translateParaPos pos t . turnEste dir . tamanhoscale tam $ getFantasmaPic) l
+desenhaFantasmas Estado {modo = EmJogo, imagens=imgs, jogo = Jogo {inimigos = l@(Personagem {vida= v}:ps), mapa = mapa}, tempo = temp} =
+  if null l then return [blank] else 
+    let
+      t = tamanhoCompMapa mapa
+      getFantasmaPic
+        | v <= 0 = return blank
+        | even (round temp) = obterimagem "fantasma1" imgs
+        | otherwise= obterimagem "fantasma2" imgs
+    in
+      mapM (\Personagem
+              { posicao = pos
+              , direcao = dir
+              , tamanho = tam
+              } -> translateParaPos pos t . turnEste dir . tamanhoscale tam $ getFantasmaPic) l
 
 
 desenhaJogo :: Estado -> IO Picture
@@ -152,5 +158,3 @@ tamanhoscale (x,y) p= do
 translateParaPos :: Posicao -> (Float,Float) -> IO Picture -> IO Picture
 translateParaPos (x,y) (w,h) p = do
   translate ((realToFrac x)* blockSize -w/2) (h/2 - (realToFrac y)* blockSize) <$> p
-
-

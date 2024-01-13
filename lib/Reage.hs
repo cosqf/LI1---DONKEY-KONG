@@ -4,6 +4,7 @@ import Tarefa5
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import Tarefa4 (atualiza)
+import Funcoes
 
 reageEvento :: Event -> Estado -> IO Estado
 reageEvento evento estado@Estado {modo= modo} = case modo of
@@ -52,11 +53,18 @@ jogoreage (EventKey (SpecialKey KeyEsc) Down _ _) e@Estado {modo = EmJogo} =
   return e {modo = Pausa RetomaJogo}
 jogoreage (EventKey (SpecialKey KeyEsc) Down _ _) e@Estado {modo = Pausa _} =
   return e {modo = EmJogo}
-jogoreage event e@Estado {modo = EmJogo} = do 
+jogoreage event e@Estado {modo = EmJogo, jogo = Jogo {jogador= p}} = do 
     let 
         acao = marioMovTeclas event (jogo e)
-    return $ e {jogo= atualiza [] acao (jogo e)}
+        vidamario = vida p
+    putStrLn (show (jogo e))  -- para debug
+    if vidamario <= 0 then 
+      return (e {modo=Mensagem Derrota}) else
+      return $ e {jogo= atualiza [] acao (jogo e)}
 jogoreage _ e = return e
+
+
+
 
 reageMensagem :: Event -> MensagemOp -> Estado -> IO Estado
 reageMensagem (EventKey (SpecialKey KeyEnter) Down _ _) _ e@Estado {modo = modo}=
@@ -66,24 +74,30 @@ reageMensagem _ estado e@Estado {modo = modo} = return (e{modo=Mensagem estado})
 
 
 marioMovTeclas :: Event -> Jogo -> Maybe Acao
-marioMovTeclas (EventKey (SpecialKey KeyUp) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = True}  -> Just Subir
-    _                             -> Nothing
-marioMovTeclas (EventKey (SpecialKey KeyDown) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = True}  -> Just Descer
-    _                             -> Nothing
-marioMovTeclas (EventKey (SpecialKey KeyLeft) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = False} -> Just AndarEsquerda
-    _                             -> Nothing
-marioMovTeclas (EventKey (SpecialKey KeyRight) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = False} -> Just AndarDireita
-    _                             -> Nothing
-marioMovTeclas (EventKey (SpecialKey KeySpace) Down _ _) jogo =
-  case jogador jogo of
-    Personagem {emEscada = False, aplicaDano = (False, _)} -> Just Saltar
-    _                                                      -> Nothing
+marioMovTeclas (EventKey (SpecialKey KeyUp) Down _ _) (Jogo {mapa= mapa, jogador= p@(Personagem {posicao= (x,y)})})
+  |emEscada p = Just Subir 
+  |emEscada p && blocopos (x,y-0.5 )mapa == Plataforma = Just Subir
+  |blocopos (posicao p) mapa == Escada && not (fst (aplicaDano p)) = Just Subir
+  |otherwise= Just Parar 
+marioMovTeclas (EventKey (SpecialKey KeyUp) Up _ _) j = Just Parar
+marioMovTeclas (EventKey (SpecialKey KeyDown) Down _ _) (Jogo {mapa= mapa, jogador= p@(Personagem {posicao= (x,y)})})
+  |emEscada p && blocopos (x,y+2) mapa /= Vazio = Just Descer 
+  |emEscada p && blocopos (x,y) mapa == Plataforma = if blocopos (x,y+2) mapa == Escada then Just Descer else Just Parar
+  |blocopos (x,y+2) mapa == Escada && not (fst (aplicaDano p)) = Just Descer
+  |otherwise= Just Parar 
+marioMovTeclas (EventKey (SpecialKey KeyDown) Up _ _) j = Just Parar
+marioMovTeclas (EventKey (SpecialKey KeyLeft) Down _ _) (Jogo {mapa= mapa,  jogador= p})
+  |emEscada p && blocodirecao p Sul mapa== Plataforma = Just AndarEsquerda
+  |not (emEscada p) = Just AndarEsquerda
+  |otherwise= Just Parar 
+marioMovTeclas (EventKey (SpecialKey KeyLeft) Up _ _) j = Just Parar
+marioMovTeclas (EventKey (SpecialKey KeyRight) Down _ _) (Jogo {mapa= mapa,  jogador= p})
+  |emEscada p && blocodirecao p Sul mapa== Plataforma = Just AndarDireita
+  |not (emEscada p) = Just AndarDireita
+  |otherwise= Just Parar 
+marioMovTeclas (EventKey (SpecialKey KeyRight) Up _ _) j = Just Parar
+marioMovTeclas (EventKey (SpecialKey KeySpace) Down _ _) (Jogo {mapa= mapa,  jogador= p})
+  |emEscada p || fst (aplicaDano p) = Just Parar
+  |otherwise = Just Saltar
 marioMovTeclas _ _ = Just Parar
+

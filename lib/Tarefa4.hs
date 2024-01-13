@@ -8,7 +8,6 @@ Módulo para a realização da Tarefa 4 de LI1 em 2023/24.
 -}
 module Tarefa4 where
 
-import Data.Maybe
 import LI12324
 import Funcoes
 
@@ -18,98 +17,79 @@ atualiza :: [Maybe Acao] -> Maybe Acao -> Jogo -> Jogo
 atualiza listamov jogadormov Jogo {mapa= m, inimigos= i, colecionaveis= c, jogador= j} = 
     Jogo
     { mapa = m,
-    inimigos = movimentos (allFantMov i m) i,
+    inimigos = movimentos (map (allFantMov m) i) i,
     colecionaveis = c,
     jogador = movimentosM jogadormov j
     }
 
 -- | combina todas as funções de movimento relacionadas com os fantasmas
-allFantMov :: [Personagem] -> Mapa -> [Maybe Acao]   
-allFantMov [] _ = []
-allFantMov p  m=
-  case (head (fantescadas p m), head (fantMov p)) of -- | fantescada toma prioridade
-    (Just a, _)        -> Just a : allFantMov (tail p) m
-    (Nothing , Just a) -> Just a : allFantMov (tail p) m
-    _                  -> Nothing : allFantMov (tail p) m
+allFantMov :: Mapa -> Personagem -> Maybe Acao 
+allFantMov m p=
+  case (ressaltacheck m p, escFantFix m p, fantEscada m p, fantMov p) of -- | prioridade : escFantFixA > fantEscadas > fantMov
+    (Just a,_,_,_)                       -> Just a
+    (Nothing, Just a, _, _)              -> Just a
+    (Nothing, Nothing, Just a, _)        -> Just a 
+    (Nothing, Nothing, Nothing , Just a) -> Just a 
+    _                                    -> Nothing 
+
 
 -- |gera uma lista de ações aleatórias para os fantasmas
-fantMov :: [Personagem] -> [Maybe Acao] -- movimento aleatorio, fzr mais inteligente dps
-fantMov [] = []
-fantMov f = func (zip f (geraAleatorios 10 4))
+fantMov :: Personagem -> Maybe Acao -- movimento aleatorio, fzr mais inteligente dps
+fantMov f = func (f,n)
     where
-        func :: [(Personagem, Int)] -> [Maybe Acao]
-        func [] = []
-        func ((p,x):fs)
-            |even x = Just AndarDireita : func fs
-            |otherwise = Just AndarEsquerda : func fs
+        [n] =geraAleatorios 10 1
+        func :: (Personagem, Int) -> Maybe Acao
+        func (p,x)
+            |even x = Just AndarDireita 
+            |otherwise = Just AndarEsquerda 
 
 -- | decide se os fantasmas sobem as escadas ou não
-fantEscada :: [Personagem] -> Mapa -> [Personagem]
-fantEscada [] _ = []
-fantEscada f mapa= func (zip f x)           -- fazer mais inteligente dps
+fantEscada :: Mapa -> Personagem -> Maybe Acao
+fantEscada mapa f= func (f,n)           -- fazer mais inteligente dps
     where
-        x= geraAleatorios 10 (length f)
-        func :: [(Personagem, Int)] -> [Personagem]
-        func [] = []
-        func ((p,x):fs)
-            |emEscada p && ( velocidade p == (0,10) || velocidade p == (0,-10)) = p :func fs
-            |Escada == blocodirecao p Sul mapa && even x = p {velocidade = (0,10), emEscada = True} : func fs
-            |Escada == blocopos (posicao p) mapa && even x = p {velocidade = (0,-10), emEscada = True} : func fs
-            |Escada == blocodirecao p Sul mapa = p {velocidade = (0,0), emEscada = False} :func fs
-            |Escada == blocopos (posicao p) mapa = p {velocidade = (0,0), emEscada = False} :func fs
-            |otherwise= p: func fs
+        [n]= geraAleatorios 100 1 
+        func :: (Personagem, Int) -> Maybe Acao
+        func (p@Personagem {posicao= (x,y)},n)
+          |even n && blocopos (x,y+2) mapa == Escada = Just Descer
+          |even n && blocopos (posicao p) mapa == Escada = Just Subir
+          |otherwise = Nothing
 
--- |atrinui movimentos aos fantasmas
-movfantescadas :: [Personagem] -> [Maybe Acao] 
-movfantescadas (p:ps)
-    |velocidade p == (0,10) && emEscada p = Just Descer : movfantescadas ps
-    |velocidade p == (0,-10) && emEscada p = Just Subir : movfantescadas ps
-    |velocidade p == (0,0) && not (emEscada p) = Nothing : movfantescadas ps
+-- | Para o fantasma depois de subirem uma escada
+escFantFix :: Mapa -> Personagem -> Maybe Acao
+escFantFix mapa (Personagem {posicao= (x,y), emEscada= esc , velocidade= (vx,vy)})
+    |esc && blocopos (x,y) mapa == Vazio && vy<0 = Just Parar 
+    |otherwise = Nothing
 
+-- | Altera a direção dos personagens com "Ressalta" definida como True quando colidem com algo
+ressaltacheck ::  Mapa -> Personagem -> Maybe Acao
+ressaltacheck mapa p@Personagem {ressalta= True, posicao= (x,y), velocidade= (vx,vy), direcao = d} =
+    case d of 
+        Este -> if blocopos (x+1,y+1) mapa == Vazio ||blocopos (x+1,y) mapa == Plataforma then Just AndarEsquerda else Nothing
+        Oeste ->  if blocopos (x-1,y+1) mapa == Vazio ||blocopos (x-1,y) mapa == Plataforma then Just AndarDireita else Nothing
+        _ -> Nothing
 
-fantescadas :: [Personagem] -> Mapa -> [Maybe Acao]
-fantescadas p mapa = movfantescadas (fantEscada p mapa)
 
 -- adicionar função para decidir oq os fantasmas fazem dps de descer/subir a escada?
 
 
-{-|implementa o movimento dos personagens, ver se ponho mais alguma coisa-}
+{-|implementa o movimento dos personagens-}
 movimentosM :: Maybe Acao -> Personagem -> Personagem 
 movimentosM (Just AndarDireita) p@(Personagem {velocidade= (vx,vy)}) = 
-    p {velocidade = (10,vy), direcao= Este}
+    p {velocidade = (10,vy), direcao= Este, emEscada= False}
 movimentosM (Just AndarEsquerda) p@(Personagem {velocidade= (vx,vy)}) = 
-    p {velocidade = (-10,vy), direcao= Oeste}
+    p {velocidade = (-10,vy), direcao= Oeste, emEscada= False}
 movimentosM (Just Subir) (p) = p {velocidade = (0,-10), direcao= Norte,emEscada=True}
 movimentosM (Just Descer) (p) = p {velocidade = (0,10), direcao= Sul, emEscada= True}
 movimentosM (Just Parar) (p) = p {velocidade = (0,0)} 
-movimentosM (Just Saltar) p@(Personagem {velocidade= (vx,vy)}) = 
-    p {velocidade = (vx, -10)} 
+movimentosM (Just Saltar) p@(Personagem {velocidade= (vx,vy), emEscada = False,direcao= d })
+    |d== Este = p {velocidade = (50, -50)} 
+    |otherwise = p {velocidade = (-50, -50)} 
 movimentosM Nothing p = p
+
 
 movimentos :: [Maybe Acao] -> [Personagem] -> [Personagem]
 movimentos ms ps = map (\(m, p) -> movimentosM m p) $ zip ms ps
 
-
-
-{-
-movimentos :: [Maybe Acao] -> [Personagem] -> [Personagem] -- definição dos movimentos andar, subir etc
-movimentos [] [] = []
-movimentos (Just AndarDireita: ms) (p@(Personagem {velocidade= (vx,vy)}):ps) = 
-    p {velocidade = (10,vy), direcao= Este}: movimentos ms ps
-movimentos (Just AndarEsquerda: ms) (p@(Personagem {velocidade= (vx,vy)}):ps) = 
-    p {velocidade = (-10,vy), direcao= Oeste}: movimentos ms ps
-movimentos (Just Subir: ms) (p:ps) = p {velocidade = (0,-10), direcao= Norte} :movimentos ms ps
-movimentos (Just Descer: ms) (p:ps) = p {velocidade = (0,10), direcao= Sul} :movimentos ms ps
-movimentos (Just Parar: ms) (p:ps) = p {velocidade = (0,0)} : movimentos ms ps
-movimentos (Just Saltar: ms) (p@(Personagem {velocidade= (vx,vy)}):ps) = 
-    p {velocidade = (vx, -10)} : movimentos ms ps
-movimentos (Nothing:ms) (p:ps) = p : movimentos ms ps 
--}
-
-
-
---fantMov :: [Personagem] -> [Maybe Acao]
---fantMov f = map (\(_, x) -> if even x then Just AndarDireita else Just AndarEsquerda) (zip f (geraAleatorios 10 4))
 
 
 {-
