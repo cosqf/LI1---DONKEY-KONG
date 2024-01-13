@@ -17,7 +17,7 @@ atualiza :: [Maybe Acao] -> Maybe Acao -> Jogo -> Jogo
 atualiza listamov jogadormov Jogo {mapa= m, inimigos= i, colecionaveis= c, jogador= j} = 
     Jogo
     { mapa = m,
-    inimigos = movimentos (map (allFantMov m) i) i,
+    inimigos = movimentos listamov i,
     colecionaveis = c,
     jogador = movimentosM jogadormov j
     }

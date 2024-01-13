@@ -25,7 +25,7 @@ tempof :: Float -> Estado -> IO Estado
 tempof _ e@(Estado {modo= Pausa _}) = return e
 tempof _ e@(Estado {modo= MenuInicial _}) = return e {tempo= 0}
 tempof t e = 
-  return $ e {jogo = movimenta 100 (realToFrac t) (jogo e)}
+  return $ e {jogo = movimenta 100 (realToFrac t) (jogo e), tempo= (tempo e) + realToFrac t}
 
 
 
@@ -137,7 +137,7 @@ jogo01 :: Jogo
 jogo01 =
   Jogo
     { mapa = mapa01,
-      inimigos = [inimigoModelo2],
+      inimigos = [],
       colecionaveis = [ moeda],
       jogador = jogadorParado
     }

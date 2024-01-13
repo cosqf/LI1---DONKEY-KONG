@@ -16,7 +16,7 @@ import Funcoes
 movimenta :: Semente -> Tempo -> Jogo -> Jogo
 movimenta semente tempo Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j } =
     let
-        iniatualizado =   map velocidades. flip fantasmahit j . map (flip colisao m) $ i
+        iniatualizado = map velocidades. flip fantasmahit j . map (flip colisao m) . map dkparado $ i
         marioatualizado = marioEscCheck m . velocidades . fantasmamortopontos i . jogadorhit i . removeMartelo . queda m (0,10) . apanhacole c . flip colisao m $ j
         colecatualizado = tiracole c j
         mapaatualizado = removeAlcapao j m
@@ -28,6 +28,10 @@ movimenta semente tempo Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= 
             colecionaveis = colecatualizado,
             jogador = marioatualizado
         }
+
+dkparado :: Personagem -> Personagem
+dkparado p@(Personagem {tipo= MacacoMalvado}) = p {velocidade = (0,0)}
+dkparado p = p
 
 {-|verifica se um fantasma colide com um martelo, se a hitbox do martelo estiver sobreposta à hitboxdo fantasma, a vida do fantasma é atualizada e a lista é atualizada, caso não aconteça a lista fica igual-}
 fantasmahit :: [Personagem] -> Personagem -> [Personagem]          -- |recebe lista de inimigos e mario

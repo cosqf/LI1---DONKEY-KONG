@@ -3,7 +3,7 @@ import LI12324
 import Tarefa5 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
-import Tarefa4 (atualiza)
+import Tarefa4 (atualiza, allFantMov)
 import Funcoes
 
 reageEvento :: Event -> Estado -> IO Estado
@@ -53,14 +53,15 @@ jogoreage (EventKey (SpecialKey KeyEsc) Down _ _) e@Estado {modo = EmJogo} =
   return e {modo = Pausa RetomaJogo}
 jogoreage (EventKey (SpecialKey KeyEsc) Down _ _) e@Estado {modo = Pausa _} =
   return e {modo = EmJogo}
-jogoreage event e@Estado {modo = EmJogo, jogo = Jogo {jogador= p}} = do 
+jogoreage event e@Estado {modo = EmJogo, jogo = Jogo {jogador= p, mapa=mapa, inimigos=ini}} = do 
     let 
         acao = marioMovTeclas event (jogo e)
+        acaof = map (allFantMov mapa) ini 
         vidamario = vida p
     putStrLn (show (jogo e))  -- para debug
     if vidamario <= 0 then 
       return (e {modo=Mensagem Derrota}) else
-      return $ e {jogo= atualiza [] acao (jogo e)}
+      return $ e {jogo= atualiza acaof acao (jogo e)}
 jogoreage _ e = return e
 
 

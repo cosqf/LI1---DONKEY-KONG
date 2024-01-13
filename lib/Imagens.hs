@@ -22,10 +22,10 @@ getImages = do
   Just mariomorto3 <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariomorto3.png"
   Just mariomorto4 <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariomorto4.png"
   Just marioparado <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/marioparado.png"
-  Just mariopulo <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariopulo.png"
   Just mariorip <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariorip.png"
   Just mariosubirfim <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariosubirfim.png"
   Just mariosubir <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariosubir.png"
+  Just mariosubir3 <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/mariosubir3.png"
   Just coin <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/coin.png"
   Just martelo <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/martelo.png"
   Just fantasma1 <- fmap scalePicture <$> loadJuicyPNG "lib/Imagens/fantasma.png"
@@ -37,6 +37,10 @@ getImages = do
   Just alcapao <- fmap (scale 10 10) <$> loadJuicyPNG "lib/Imagens/alcapao.png"
   Just escada <- fmap (scale 10 10) <$> loadJuicyPNG "lib/Imagens/escada.png"
   Just plataforma <- fmap (scale 10 10) <$> loadJuicyPNG "lib/Imagens/plataforma.png"
+  Just pauline1 <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/pauline1.png"
+  Just pauline2 <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/pauline2.png"
+  Just dkmove <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/dkmove.png"
+  Just dkparado <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/dkparado.png"
 
   return [
     ("marioanda1", marioanda1),
@@ -51,10 +55,10 @@ getImages = do
     ("mariomorto3", mariomorto3),
     ("mariomorto4", mariomorto4),
     ("marioparado", marioparado),
-    ("mariopulo", mariopulo),
     ("mariorip", mariorip),
     ("mariosubirfim", mariosubirfim),
     ("mariosubir", mariosubir),
+    ("mariosubir3", mariosubir3),
     ("coin", coin),
     ("martelo", martelo),
     ("fantasma1", fantasma1),
@@ -65,41 +69,16 @@ getImages = do
     ("menuopcoes",menuopcoes),
     ("alcapao", alcapao),
     ("escada",escada),
-    ("plataforma",plataforma)
+    ("plataforma",plataforma),
+    ("pauline1", pauline1),
+    ("pauline2", pauline2),
+    ("dkmove", dkmove),
+    ("dkparado", dkparado)
     ]
 
 obterimagem :: String -> Imagem -> IO Picture
 obterimagem n imgs = do
   case lookup n imgs of
     Just img -> return img
-    Nothing  -> error ""
+    Nothing  -> error "imagem não encontrada"
 
-{-
-marioanda1 = obterimagem "marioanda1" getImages
-marioanda2 = obterimagem "marioanda2" getImages
-mariomarteloandadown = obterimagem "mariomarteloandadown" getImages
-mariomartelodown = obterimagem "mariomartelodown" getImages
-mariomarteloup = obterimagem "mariomarteloup" getImages
-mariomarteloupanda = obterimagem "mariomarteloupanda" getImages
-mariomarteloupanda2 = obterimagem "mariomarteloupanda2" getImages
-mariomorto1 = obterimagem "mariomorto1" getImages
-mariomorto2 = obterimagem "mariomorto2" getImages
-mariomorto3 = obterimagem "mariomorto3" getImages
-mariomorto4 = obterimagem "mariomorto4" getImages
-marioparado = obterimagem "marioparado" getImages
-mariopulo = obterimagem "mariopulo" getImages
-mariorip = obterimagem "mariorip" getImages
-mariosubirfim = obterimagem "mariosubirfim" getImages
-mariosubir = obterimagem "mariosubir" getImages
-coin = obterimagem "coin" getImages 
-martelo = obterimagem "martelo" getImages
-fantasma1 = obterimagem "fantasma1" getImages
-fantasma2 = obterimagem "fantasma2" getImages
-menu = obterimagem "menu" getImages
-menujogar = obterimagem "menujogar" getImages
-menuopcoes = obterimagem "menuopcoes" getImages
-menusair = obterimagem "menusair" getImages
-alcapao = obterimagem "alcapao" getImages
-escada = obterimagem "escada" getImages
-plataforma = obterimagem "plataforma" getImages
--}
