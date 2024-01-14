@@ -19,19 +19,45 @@ desenha estado@Estado {modo= modo} = case modo of
   Pausa op -> desenhaMenu estado
   EmJogo -> desenhaJogo estado
   Mensagem op -> desenhaMensagem estado op
-  --OpcoesOp
+  Opcoes op -> desenhaOp estado 
 
 -- | Desenha o menu
 desenhaMenu :: Estado -> IO Picture
 desenhaMenu Estado {modo = MenuInicial Menu, imagens= imgs} = obterimagem "menu" imgs
 desenhaMenu Estado {modo = MenuInicial Jogar, imagens= imgs} = obterimagem "menujogar" imgs
 desenhaMenu Estado {modo = MenuInicial Sair, imagens= imgs} = obterimagem "menusair" imgs
-desenhaMenu Estado {modo = MenuInicial Opcoes, imagens= imgs} = obterimagem "menuopcoes" imgs
+desenhaMenu Estado {modo = MenuInicial Opcao, imagens= imgs} = obterimagem "menuopcoes" imgs
 desenhaMenu Estado {modo = Pausa RetomaJogo,imagens=imgs} = obterimagem "pausacontinuar" imgs
 desenhaMenu Estado {modo = Pausa VoltaMenu,imagens=imgs} = obterimagem "pausasair" imgs
 desenhaMenu _ = return $ Pictures []
 
-
+desenhaOp :: Estado -> IO Picture
+desenhaOp Estado {modo = Opcoes Creditos1, imagens= imgs} = obterimagem "credito1" imgs
+desenhaOp Estado {modo = Opcoes Creditos2, imagens= imgs} = obterimagem "credito2" imgs
+desenhaOp Estado {modo = Opcoes Creditos3, imagens= imgs} = obterimagem "credito3" imgs
+desenhaOp Estado {modo = Opcoes Creditos4, imagens= imgs} = obterimagem "credito4" imgs
+desenhaOp Estado {modo = Opcoes Creditos5, imagens = imgs, tempo = t} = do 
+  let 
+    bg = obterimagem "credito5" imgs
+    mario
+      | (mod (round (t * 1000)) 500) < 250 = tamanhoscale (3,3) $ obterimagem "marioanda1" imgs
+      | otherwise = tamanhoscale (3,3) . turnEste Este $ obterimagem "marioanda1" imgs
+    pauline
+      | (mod (round (t * 1000)) 1500) < 750 = tamanhoscale (3,3) $ obterimagem "pauline1" imgs
+      | otherwise =tamanhoscale (3,3) . turnEste Este $ obterimagem "pauline1" imgs
+    fantasma 
+      | (mod (round (t * 1000)) 1000) < 500 = tamanhoscale (3,3) $ obterimagem "fantasma2" imgs
+      | otherwise = tamanhoscale (3,3) . turnEste Este $  obterimagem "fantasma2" imgs
+    dk
+      | (mod (round (t * 1000)) 500) < 250 = tamanhoscale (4,4) $ obterimagem "dkmove" imgs 
+      | otherwise = tamanhoscale (4,4) . turnEste Este $  obterimagem "dkmove" imgs
+  bg' <- bg
+  mario' <- mario
+  pauline' <- pauline
+  fantasma' <- fantasma
+  dk' <- dk
+  return $ bg' <> (translate (-500) (-150) mario') <> translate (-200) (-300) pauline' <> (translate (200) (-350) fantasma') <> (translate (500) (-250) dk')
+desenhaOp _ = return $ Pictures []
 -- | Desenha a mesagem de vitória/derrota
 desenhaMensagem :: Estado -> MensagemOp -> IO Picture
 desenhaMensagem (Estado {imagens = imgs, tempo = t, jogo = Jogo {jogador = Personagem {pontos = p}}}) op =
@@ -54,7 +80,7 @@ desenhaMensagem (Estado {imagens = imgs, tempo = t, jogo = Jogo {jogador = Perso
         digitToInt :: Char -> Int
         digitToInt = read . return
 
-    ima :: Int -> IO Picture  -- Change the type of ima
+    ima :: Int -> IO Picture  
     ima num = case num of
       0 -> obterimagem "0" imgs
       1 -> obterimagem "1" imgs
@@ -75,10 +101,6 @@ desenhaMensagem (Estado {imagens = imgs, tempo = t, jogo = Jogo {jogador = Perso
         pontosnum <- funcT 0 ima (digitize p)
         return $ winImg <> Translate (-200) 200 (pictures temponum) <> Translate (-100) 390 (pictures pontosnum)
   in mensagem
-
-
-
-
 
 
 -- | Desenha o jogador
@@ -126,12 +148,13 @@ desenhaColec Estado {modo = EmJogo, imagens= imgs, jogo = Jogo {colecionaveis = 
                         Martelo -> translateParaPos pos t (obterimagem "martelo" imgs)
                         Moeda   -> translateParaPos pos t ( obterimagem "coin" imgs)) l
 
--- | Desenha os fantasmas
+-- | Recebe desenhaFant e desenhaDK e junta ambos
 desenhaInimigos :: Estado -> IO [Picture]
 desenhaInimigos Estado {modo = EmJogo, imagens=imgs, jogo = Jogo {inimigos = [], mapa = mapa}, tempo = temp} = return [blank]
 desenhaInimigos Estado {modo = EmJogo, imagens=imgs, jogo = Jogo {inimigos = l, mapa = mapa}, tempo = temp} =
   mapM (desenhaFant mapa temp imgs) l <> (mapM (desenhaDK mapa temp imgs) l)
 
+-- | Desenha os fantasmas
 desenhaFant :: Mapa -> Tempo -> Imagem  -> Personagem -> IO Picture
 desenhaFant mapa temp imgs (Personagem {vida = v, tipo = Fantasma, posicao = pos, direcao = dir, tamanho = tam})= do
   let

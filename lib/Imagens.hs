@@ -63,8 +63,13 @@ getImages = do
   Just oito <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/8.png"
   Just nove <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/9.png"
   Just pausacontinuar <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/pausacontinuar.png"
-  Just pausasair <- fmap scalePicture <$> loadJuicyPNG "lib/Imagens/pausasair.png"
+  Just pausasair <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/pausasair.png"
   Just coracao <- fmap scalePicture <$> loadJuicyPNG "lib/Imagens/coracao.png"
+  Just credito1 <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/credit1.png"
+  Just credito2 <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/credit2.png"
+  Just credito3 <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/credit3.png"
+  Just credito4 <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/credit4.png"
+  Just credito5 <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/credit5.png"
 
 
   return [
@@ -113,7 +118,12 @@ getImages = do
     ("9", nove),
     ("pausacontinuar", pausacontinuar),
     ("pausasair", pausasair),
-    ("coracao", coracao)
+    ("coracao", coracao),
+    ("credito1", credito1),
+    ("credito2", credito2),
+    ("credito3", credito3),
+    ("credito4", credito4),
+    ("credito5", credito5)
     ]
 
 -- | Função que devolve a imagem de acordo com o seu nome

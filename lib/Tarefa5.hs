@@ -23,13 +23,13 @@ data Estado = Estado
   }
 
 -- | Os vários modos de jogo
-data Modo = EmJogo | MenuInicial MenuInicialOp | Pausa PausaOp | Mensagem MensagemOp | OpcoesOp
+data Modo = EmJogo | MenuInicial MenuInicialOp | Pausa PausaOp | Mensagem MensagemOp | Opcoes OpcoesOp
 
 -- | Opções do menu inicial
-data MenuInicialOp = Menu | Jogar | Sair | Opcoes
+data MenuInicialOp = Menu | Jogar | Sair | Opcao
 
 -- | Opcções das opções
-data OpcoesOp = Creditos 
+data OpcoesOp = Creditos1 | Creditos2 | Creditos3 | Creditos4 | Creditos5
 
 -- | Opcções do menu de pausa
 data PausaOp = VoltaMenu | RetomaJogo deriving (Show,Eq)

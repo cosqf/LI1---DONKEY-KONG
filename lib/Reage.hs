@@ -33,6 +33,7 @@ reageEvento evento estado@Estado {modo= modo} = case modo of
   EmJogo -> jogoreage evento estado
   Mensagem op -> reageMensagem evento op estado
   Pausa op -> pausareage evento estado
+  Opcoes op -> opcoesreage evento estado
 
 -- | Função que controla o jogo quando está em pausa
 pausareage :: Event -> Estado -> IO Estado
@@ -54,20 +55,33 @@ menureage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = MenuInicial 
 menureage (EventKey (SpecialKey KeyUp) Down _ _) e@Estado {modo = MenuInicial Sair} =
   return e {modo = MenuInicial Jogar}
 menureage (EventKey (SpecialKey KeyUp) Down _ _) e@Estado {modo = MenuInicial Jogar} =
-  return e {modo = MenuInicial Opcoes}
+  return e {modo = MenuInicial Opcao}
 menureage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = MenuInicial Sair} =
-  return e {modo = MenuInicial Opcoes}
-menureage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = MenuInicial Opcoes } =
+  return e {modo = MenuInicial Opcao}
+menureage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = MenuInicial Opcao } =
   return e {modo = MenuInicial Jogar}
-menureage (EventKey (SpecialKey KeyUp) Down _ _) e@Estado {modo = MenuInicial Opcoes} =
+menureage (EventKey (SpecialKey KeyUp) Down _ _) e@Estado {modo = MenuInicial Opcao} =
   return e {modo = MenuInicial Sair}
 menureage (EventKey (SpecialKey KeyEnter) Down _ _) e@Estado {modo = MenuInicial Jogar} =
   return e {modo = EmJogo}
 menureage (EventKey (SpecialKey KeyEnter) Down _ _) e@Estado {modo = MenuInicial Sair} = error "Sair do jogo"
-menureage (EventKey (SpecialKey KeyEnter) Down _ _) e@Estado {modo = MenuInicial Opcoes} = 
-  return e {modo = OpcoesOp}
-menureage (EventKey _ Down _ _)  e@Estado {modo = OpcoesOp} = return e {modo = MenuInicial Jogar}
+menureage (EventKey (SpecialKey KeyEnter) Down _ _) e@Estado {modo = MenuInicial Opcao} = 
+  return e {modo = Opcoes Creditos1}
 menureage _ e = return e
+
+-- | Função que controla o menu das opções
+opcoesreage :: Event -> Estado -> IO Estado 
+opcoesreage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = Opcoes Creditos1} =
+  return e {modo = Opcoes Creditos2}
+opcoesreage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = Opcoes Creditos2} =
+  return e {modo = Opcoes Creditos3}
+opcoesreage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = Opcoes Creditos3} =
+  return e {modo = Opcoes Creditos4}
+opcoesreage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = Opcoes Creditos4} =
+  return e {modo = Opcoes Creditos5}
+opcoesreage (EventKey (SpecialKey KeyDown) Down _ _) e@Estado {modo = Opcoes Creditos5} =
+  return e {modo = MenuInicial Jogar}
+opcoesreage _ e = return e
 
 -- | Função que controla o jogo quando este está a decorrer
 jogoreage :: Event -> Estado -> IO Estado
