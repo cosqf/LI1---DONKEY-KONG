@@ -22,8 +22,6 @@ test_overlap = test [
 -}
 
 
--- | Colisoes entre personagens
-
 p1 = Personagem (0,0) Jogador (5,4) Este (1,1) False False 10 0 (False, 0.0)
 p2 = Personagem (0,0) Fantasma (4,4) Oeste (1,1) True False 2 0 (False, 0.0)
 
@@ -79,4 +77,26 @@ teste8 = test [
     "Teste 2" ~: ((1.5,2.5),(2.5,3.5)) ~=? hitboxPersonagem Personagem { velocidade = (0, 0), tipo = Fantasma, posicao = (2.0, 3.0), direcao = Norte, tamanho = (1, 1), emEscada = False, ressalta = True, vida = 1, pontos = 0, aplicaDano = (False, 0) }
     ]
 
-testesTarefa1 = test [teste1, teste2, teste3, teste4, teste5, teste6, teste7, teste8]
+
+teste9 = "T9: Hitbox correta para um jogador" ~: ((1.0, 1.0), (2.0, 2.0)) ~=? hitboxPersonagem (Personagem (0,0) Jogador (1.5, 1.5) Norte (1,1) False False 10 0 (False, 0.0))
+
+teste10 = "T10: Hitbox correta para um fantasma" ~: ((2.0, 3.0), (3.0, 4.0)) ~=? hitboxPersonagem (Personagem (0,0) Fantasma (2.5, 3.5) Norte (1,1) False False 10 0 (False, 0.0))
+
+
+
+testesSafeGet = test [
+    "Teste 1" ~: Just 2 ~=? safeGet 1 0 [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+    "Teste 3" ~: Nothing ~=? safeGet 3 2 [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+    ]
+
+testesOverlap = test [
+    "Teste 1" ~: True ~=? overlap ((1.0, 1.0), (2.0, 2.0)) ((1.5, 1.5), (2.5, 2.5)),
+    "Teste 2" ~: False ~=? overlap ((1.0, 1.0), (2.0, 2.0)) ((3.0, 3.0), (4.0, 4.0)),
+    "Teste 3" ~: True ~=? overlap ((0.0, 0.0), (2.0, 2.0)) ((1.0, 1.0), (3.0, 3.0)),
+    "Teste 4" ~: False ~=? overlap ((-1.0, -1.0), (1.0, 1.0)) ((1.0, 1.0), (2.0, 2.0))
+    ]
+
+
+
+testesTarefa1 = test [teste1, teste2, teste3, teste4, teste5, teste6, teste7, teste8, teste9, teste10, testesSafeGet, testesOverlap]
+
