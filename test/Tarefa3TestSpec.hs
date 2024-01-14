@@ -4,6 +4,7 @@ import LI12324
 import Tarefa3
 import Test.HUnit
 
+
 blocos1 :: [[Bloco]]
 blocos1 = [ [ Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio]
           , [ Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio]
@@ -89,4 +90,140 @@ j9 = Jogo gameMap1 [] [c2] pl6
 
 teste6 = "T6: Jogador apanha uma moeda" ~: True ~=? (pontos . jogador $ movimenta 100 1.0 j9) > (pontos . jogador $ j9)
 
-testesTarefa3 = test [teste1, teste2A, teste2B, teste3, teste4, teste5, teste6]
+
+testFantasmahit :: Test
+testFantasmahit = TestList
+    [ "Test 1: vida diminui" ~:
+        fantasmahit [Personagem {tipo = Fantasma, vida = 3}] (Personagem {tipo = Jogador, posicao = (0, 0)}) ~?= [Personagem {tipo = Fantasma, vida = 2}]
+    , "Test 2: sem colisão, sem perda de hp" ~:
+        fantasmahit [Personagem {tipo = Fantasma, vida = 3}] (Personagem {tipo = Jogador, posicao = (10, 10)}) ~?= [Personagem {tipo = Fantasma, vida = 3}]
+    ]
+
+
+testHitboxMartelo :: Test
+testHitboxMartelo = TestList
+    [ "Test 1" ~:
+        hitboxMartelo (Personagem {posicao = (1, 1), direcao = Este, tamanho = (1, 1), emEscada = False, aplicaDano = (True, 10.0)}) ~?= Just ((1, 0), (2, 2))
+    , "Test 2" ~:
+        hitboxMartelo (Personagem {posicao = (1, 1), direcao = Oeste, tamanho = (1, 1), emEscada = False, aplicaDano = (True, 10.0)}) ~?= Just ((0, 0), (1, 2))
+    , "Test 3" ~:
+        hitboxMartelo (Personagem {posicao = (1, 1), direcao = Este, tamanho = (1, 1), emEscada = False, aplicaDano = (False, 0.0)}) ~?= Nothing
+    ]
+
+testFantasmamortopontos :: Test
+testFantasmamortopontos = TestList
+    [ "Test 1: pontos aumentam" ~:
+        fantasmamortopontos [Personagem {tipo = Fantasma, vida = 3}] (Personagem {tipo = Jogador, posicao = (0, 0), pontos = 100}) ~?= (Personagem {tipo = Jogador, posicao = (0, 0), pontos = 600})
+    , "Test 2: pontos não aumentam" ~:
+        fantasmamortopontos [Personagem {tipo = Fantasma, vida = 3}] (Personagem {tipo = Jogador, posicao = (10, 10), pontos = 100}) ~?= (Personagem {tipo = Jogador, posicao = (10, 10), pontos = 100})
+    ]
+
+
+testJogadorhit :: Test
+testJogadorhit = TestList
+    [ "Test 1: hp dimunui" ~:
+        jogadorhit [Personagem {vida = 3, posicao = (0, 0)}] (1,2) (Personagem {vida = 2, posicao=(5,4)}) ~?= (Personagem {vida = 1, posicao=(1,2)})
+    , "Test 2: hp não muda" ~:
+        jogadorhit [Personagem {vida = 3, posicao = (0, 0)}] (1,2) (Personagem {vida = 3, posicao = (5,4)}) ~?= (Personagem {vida = 3, posicao = (5,4)})
+    ]
+
+
+testTiracole :: Test
+testTiracole = TestList
+    [ "Test 1:moeda desaparece" ~:
+        tiracole [(Moeda, (1, 1))] (Personagem {posicao = (1, 1)}) ~?= []
+    , "Test 2: moeda não desaparece" ~:
+        tiracole [(Moeda, (1, 1))] (Personagem {posicao = (10, 10)}) ~?= [(Moeda, (1, 1))]
+    ]
+
+testApanhacole :: Test
+testApanhacole = TestList
+    [ "Test 1: pontos aumentam" ~:
+        apanhacole [(Moeda, (1, 1))] (Personagem {posicao = (1, 1), velocidade = (0, 0),pontos = 100}) ~?= (Personagem {posicao = (1, 1), velocidade = (0, 0), pontos = 600})
+    , "Test 2: pontos ficam iguais" ~:
+        apanhacole [(Moeda, (1, 1))] (Personagem {posicao = (10, 10), velocidade = (0, 0), pontos = 100}) ~?= (Personagem {posicao = (10, 10), velocidade = (0, 0), pontos = 100})
+    ]
+
+
+testRemoveMartelo :: Test
+testRemoveMartelo = TestList
+    [ "Test 1: tempo diminui" ~:
+        removeMartelo (Personagem {aplicaDano = (True, 5.0), velocidade = (0, 0)}) ~?= (Personagem {aplicaDano = (True, 4.75), velocidade = (0, 0)}) -- Assuming a frame rate of 60fps
+    , "Test 2: tempo chega a zero" ~:
+        removeMartelo (Personagem {aplicaDano = (True, 0.1) ,velocidade = (0, 0)}) ~?= (Personagem {aplicaDano = (False, 0.0), velocidade = (0, 0)})
+    , "Test 3: tempo não muda" ~:
+        removeMartelo (Personagem {aplicaDano = (False, 0.0), velocidade = (0, 0)}) ~?= (Personagem {aplicaDano = (False, 0.0), velocidade = (0, 0)})
+    ]
+
+
+testQueda :: Test
+testQueda = TestList
+    [ "Test 1: o personagem cai" ~:
+        queda gameMap1 (0, -10) (Personagem {tipo = Jogador} {posicao = (5, 5), tamanho = (1, 1), velocidade = (0, 0), direcao = Norte, emEscada = False}) ~?=
+        (Personagem {tipo = Jogador} {posicao = (5, 5), tamanho = (1, 1), velocidade = (0, -10), direcao = Sul, emEscada = False})
+    , "Test 2: personagem fica igual" ~:
+        queda gameMap1 (0, -10) (Personagem {tipo = Jogador} {posicao = (5, 5), tamanho = (1, 1), velocidade = (0, 0), direcao = Norte, emEscada = False}) ~?=
+        (Personagem {tipo = Jogador} {posicao = (5, 5), tamanho = (1, 1), velocidade = (0, 0), direcao = Norte, emEscada = False})
+    ]
+
+
+testRemoveAlcapao :: Test
+testRemoveAlcapao = TestList
+    [ "Test 1" ~:
+        removeAlcapao (Personagem {posicao = (5, 5), velocidade = (0, 0)}) gameMap1 ~?= gameMap1
+    ]
+
+
+testColisao :: Test
+testColisao = TestList
+    [ "Test 1" ~:
+        colisao (Personagem {posicao = (5, 5), direcao = Este}) gameMap1 ~?= (Personagem {posicao = (5, 5), direcao = Este})
+    , "Test 2" ~:
+        colisao (Personagem {posicao = (5, 5), direcao = Oeste}) gameMap1 ~?= (Personagem {posicao = (5, 5), direcao = Oeste})
+    , "Test 3" ~:
+        colisao (Personagem {posicao = (5, 5), direcao = Norte, velocidade = (0, -1)}) gameMap1 ~?= (Personagem {posicao = (5, 5), direcao = Norte, velocidade = (0, -1)})
+    ]
+
+
+testVelocidades :: Test
+testVelocidades = TestList
+    [ "Test 1" ~:
+        velocidades (Personagem {posicao = (5, 5), velocidade = (0, 0)}) ~?= (Personagem {posicao = (5, 5), velocidade = (0, 0)})
+    , "Test 2" ~:
+        velocidades (Personagem {posicao = (5, 5), velocidade = (2, 0), direcao = Este}) ~?= (Personagem {posicao = (5.01, 5), velocidade = (2, 0), direcao = Este})
+    , "Test 3" ~:
+        velocidades (Personagem {posicao = (5, 5), velocidade = (2, 2), direcao = Este}) ~?= (Personagem {posicao = (5.01, 5.01), velocidade = (2, 2), direcao = Este})
+    ]
+
+testMarioEscCheck :: Test
+testMarioEscCheck = TestList
+    [ "Test 1" ~:
+        marioEscCheck gameMap1 (Personagem {posicao = (5, 5), velocidade = (0, 5), emEscada = True}) ~?= (Personagem {posicao = (5, 5), velocidade = (0, 0), emEscada = True})
+    , "Test 2" ~:
+        marioEscCheck gameMap1 (Personagem {posicao = (5, 5), velocidade = (0, 5), emEscada = False}) ~?= (Personagem {posicao = (5, 5), velocidade = (0, 5), emEscada = False})
+    ]
+
+
+testOverlap' :: Test
+testOverlap' = TestList
+    [ "Test 1" ~:
+        overlap' (Just ((1, 1), (3, 3))) ((2, 2), (4, 4)) ~?= True
+    , "Test 2" ~:
+        overlap' (Just ((1, 1), (3, 3))) ((4, 4), (6, 6)) ~?= False
+    , "Test 3" ~:
+        overlap' Nothing ((2, 2), (4, 4)) ~?= False
+    ]
+
+
+testColisoesHitB :: Test
+testColisoesHitB = TestList
+    [ "Test 1" ~:
+        colisoesHitB (1, 1) (2, 2) ~?= True
+    , "Test 2" ~:
+        colisoesHitB (1, 1) (4, 4) ~?= False
+    ]
+
+
+
+testesTarefa3 = test [teste1, teste2A, teste2B, teste3, teste4, teste5, teste6,testFantasmahit, testHitboxMartelo, testFantasmamortopontos,
+ testJogadorhit, testTiracole, testApanhacole , testRemoveMartelo, testQueda, testRemoveAlcapao , testColisao, testVelocidades, testMarioEscCheck ,testOverlap',testColisoesHitB ]

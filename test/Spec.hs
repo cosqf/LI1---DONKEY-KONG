@@ -1,9 +1,9 @@
 module Main where
 
-import Tarefa1Spec
-import Tarefa2Spec
-import Tarefa3Spec
-import Tarefa4Spec
+import Tarefa1TestSpec
+import Tarefa2TestSpec
+import Tarefa3TestSpec
+import Tarefa4TestSpec
 import Test.HUnit
 
 main :: IO ()
