@@ -41,6 +41,18 @@ getImages = do
   Just pauline2 <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/pauline2.png"
   Just dkmove <-fmap (scale 5 5) <$> loadJuicyPNG "lib/Imagens/dkmove.png"
   Just dkparado <-fmap (scale 5 5) <$> loadJuicyPNG "lib/Imagens/dkparado.png"
+  Just gameover <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/gameover.png"
+  Just gamewin <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/gamewin.png"
+  Just zero <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/0.png"
+  Just um <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/1.png"
+  Just dois <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/2.png"
+  Just tres <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/3.png"
+  Just quatro <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/4.png"
+  Just cinco <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/5.png"
+  Just seis <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/6.png"
+  Just sete <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/7.png"
+  Just oito <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/8.png"
+  Just nove <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/9.png"
 
   return [
     ("marioanda1", marioanda1),
@@ -73,7 +85,19 @@ getImages = do
     ("pauline1", pauline1),
     ("pauline2", pauline2),
     ("dkmove", translate 0 50 dkmove),
-    ("dkparado",translate 0 50 dkparado)
+    ("dkparado",translate 0 50 dkparado),
+    ("gameover", gameover),
+    ("gamewin", gamewin),
+    ("0", zero),
+    ("1", um),
+    ("2", dois),
+    ("3", tres),
+    ("4", quatro),
+    ("5", cinco),
+    ("6", seis),
+    ("7", sete),
+    ("8", oito),
+    ("9", nove)
     ]
 
 obterimagem :: String -> Imagem -> IO Picture

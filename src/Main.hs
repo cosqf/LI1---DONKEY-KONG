@@ -23,6 +23,7 @@ fr = 25
 
 tempof :: Float -> Estado -> IO Estado
 tempof _ e@(Estado {modo= Pausa _}) = return e
+tempof _  e@(Estado {modo= Mensagem _}) = return e
 tempof _ e@(Estado {modo= MenuInicial _}) = return e {tempo= 0}
 tempof t e = 
   return $ e {jogo = movimenta 100 (realToFrac t) (jogo e), tempo= (tempo e) + realToFrac t}
@@ -74,7 +75,7 @@ mapa02 =
 mapa01 :: Mapa
 mapa01 =
   Mapa
-    ((8.5, 6.5), Este)
+    ((6.5, 1.5), Este)
     (5, 1.5)
     [ [Plataforma, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Plataforma],
       [Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio],
@@ -135,7 +136,7 @@ jogadorParado =
   Personagem
     { velocidade = (0.0, 0.0),
       tipo = Jogador,
-      posicao = (8.5, 6.5),
+      posicao = (6.5, 1.5),
       direcao = Oeste,
       tamanho = (0.8, 0.8),
       emEscada = False,
@@ -152,6 +153,6 @@ jogo01 =
   Jogo
     { mapa = mapa01,
       inimigos = [inimigoModelo, inimigoModelo2],
-      colecionaveis = [martelo, moeda],
+      colecionaveis = [moeda],
       jogador = jogadorParado
     }

@@ -14,10 +14,10 @@ import Funcoes
 
 {-|atualiza o estado do jogo, de acordo com o tempo especificado, atualiza a posição dos personagens,dos colecionaveis, tal como os pontos de vida dos personagens-}
 movimenta :: Semente -> Tempo -> Jogo -> Jogo
-movimenta semente tempo Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j } =
+movimenta semente tempo Jogo {mapa= m@(Mapa (posi,_) _ blocos), inimigos= i, colecionaveis = c, jogador= j } =
     let
         iniatualizado = map (velocidades . (fantEscCheck m) . (flip colisao m) . (queda m (0,10)) ) . flip fantasmahit j . map dkparado $ i
-        marioatualizado = marioEscCheck m . velocidades . fantasmamortopontos i . jogadorhit (cooldownVida tempo 0 i j) i . removeMartelo . queda m (0,10) . apanhacole c . flip colisao m $ j
+        marioatualizado = marioEscCheck m . velocidades . fantasmamortopontos i . jogadorhit i posi . removeMartelo . queda m (0,10) . apanhacole c . flip colisao m $ j
         colecatualizado = tiracole c j
         mapaatualizado = removeAlcapao j m
     in
@@ -28,9 +28,6 @@ movimenta semente tempo Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= 
             colecionaveis = colecatualizado,
             jogador = marioatualizado
         }
-
-
-
 
 
 -- | Certifica-se que o Donkey Kong está parado.
@@ -66,6 +63,16 @@ fantasmamortopontos (f@(Personagem {tipo=Fantasma, vida= v}):fs) mario@(Personag
 fantasmamortopontos _ p = p
 
 {-|verifica se um personagem colide com o jogador,se um inimigo colidir com o jogador, o jogador perde uma vida-}
+
+jogadorhit ::[Personagem]-> Posicao -> Personagem -> Personagem -- |verifica se a colisao de personagens com o mario acontece
+jogadorhit [] _ m = m
+jogadorhit (x@(Personagem {vida=vf}):xs) posi mario@(Personagem{vida = v})
+    |vf == 0 = jogadorhit xs posi mario
+    |colisoesPersonagens x mario = mario {vida= v-1, posicao = posi} -- |se sim tira uma vida
+    |otherwise = jogadorhit xs posi mario
+
+
+{-
 jogadorhit :: Double -> [Personagem] -> Personagem -> Personagem -- |verifica se a colisao de personagens com o mario acontece
 jogadorhit _ [] m = m
 jogadorhit cool (x@(Personagem {vida=vf}):xs) mario@(Personagem{vida = v})
@@ -80,7 +87,7 @@ cooldownVida temp t l@(x@(Personagem {vida = vf}) : xs) mario@(Personagem {vida 
     | colisoesPersonagens x mario = cooldownVida temp (temp+1) l mario  
     | temp <= t = t - (1.0 / 50.0)
     | otherwise = t
-
+-}
 {-|remove colecionáveis do mapa se o jogador colidir com eles-}
 tiracole :: [(Colecionavel, Posicao)] -> Personagem -> [(Colecionavel, Posicao)]
 tiracole [] mario = []

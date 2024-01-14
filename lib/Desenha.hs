@@ -1,3 +1,4 @@
+{-# LANGUAGE BlockArguments #-}
 module Desenha where
 import LI12324
 import Graphics.Gloss
@@ -12,7 +13,7 @@ desenha estado@Estado {modo= modo} = case modo of
   MenuInicial op -> desenhaMenu estado
   Pausa op -> desenhaMenu estado
   EmJogo -> desenhaJogo estado
-  Mensagem op -> desenhaMensagem op
+  Mensagem op -> desenhaMensagem estado op
   --OpcoesOp
 
 -- | Desenha o menu
@@ -31,17 +32,52 @@ opcaoSair = Translate (-150) (-100) $ Text "Sair"
 opcaoRetomaJogo = Translate (-150) (100) $ Text "Jogar"
 
 -- | Desenha a mesagem de vitória/derrota
-desenhaMensagem :: MensagemOp -> IO Picture
-desenhaMensagem op =
-  return $
-    Pictures
-      [ Translate (-150) 100 $ Color blue $ mensagem,
-        Translate (-850) (-100) $ Text "Pressione Enter para retornar ao menu"
-      ]
-  where
+desenhaMensagem :: Estado -> MensagemOp -> IO Picture
+desenhaMensagem (Estado {imagens = imgs, tempo = t, jogo = Jogo {jogador = Personagem {pontos = p}}}) op =
+  let
+    funcT :: Int -> (Int -> IO Picture) -> [Int] -> IO [Picture]
+    funcT _ _ [] = return []
+    funcT acc fun nums
+      | acc == 0 = do
+        pic <- fun (head nums)
+        rest <- funcT (acc + 1) fun (tail nums)
+        return (pic : rest)
+      | otherwise = do
+        pic <- fun (head nums)
+        rest <- funcT (acc + 1) fun (tail nums)
+        return (Translate (100 * fromIntegral acc) 0 pic : rest)
+
+    digitize :: Int -> [Int]
+    digitize num = map digitToInt (show num)
+      where
+        digitToInt :: Char -> Int
+        digitToInt = read . return
+
+    ima :: Int -> IO Picture  -- Change the type of ima
+    ima num = case num of
+      0 -> obterimagem "0" imgs
+      1 -> obterimagem "1" imgs
+      2 -> obterimagem "2" imgs
+      3 -> obterimagem "3" imgs
+      4 -> obterimagem "4" imgs
+      5 -> obterimagem "5" imgs
+      6 -> obterimagem "6" imgs
+      7 -> obterimagem "7" imgs
+      8 -> obterimagem "8" imgs
+      9 -> obterimagem "9" imgs
+
     mensagem = case op of
-      Vitoria -> Text "Parabéns! Venceu!"
-      Derrota -> Text "Perdeu"
+      Derrota -> obterimagem "gameover" imgs
+      Vitoria -> do
+        winImg <- obterimagem "gamewin" imgs
+        temponum <- funcT 0 ima (digitize (round t))
+        pontosnum <- funcT 0 ima (digitize p)
+        return $ winImg <> Translate (-200) 200 (pictures temponum) <> Translate (-100) 390 (pictures pontosnum)
+  in mensagem
+
+
+
+
 
 
 -- | Desenha o jogador
@@ -72,7 +108,7 @@ desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
   Personagem {posicao = pos, direcao=dir, tamanho= tam, emEscada= True}, mapa = mapa}}
   |blocopos pos mapa == Vazio = translateParaPos pos tamcomp . tamanhoscale tam $ if (mod (round (t * 1000)) 500) < 250 then
                                                                             obterimagem "mariosubirfim" imgs
-                                                                              else obterimagem "mariosubir3" imgs                                                                           
+                                                                              else obterimagem "mariosubir3" imgs
   |otherwise= translateParaPos pos tamcomp . tamanhoscale tam $ if (mod (round (t * 1000)) 500) < 250 then
                                                                             obterimagem "mariosubir" imgs
                                                                               else turnEste Este (obterimagem "mariosubir" imgs)
@@ -80,9 +116,9 @@ desenhaJogador Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {jogador=
 -- falta morte
 
 -- | Desenha os colecionáveis
-desenhaColec :: Estado -> IO [Picture] 
-desenhaColec Estado {modo = EmJogo, imagens= imgs, jogo = Jogo {colecionaveis = l,mapa= mapa}} = 
-  let 
+desenhaColec :: Estado -> IO [Picture]
+desenhaColec Estado {modo = EmJogo, imagens= imgs, jogo = Jogo {colecionaveis = l,mapa= mapa}} =
+  let
     t = tamanhoCompMapa mapa
   in
     mapM (\(c, pos) -> case c of                  --mapM converte a função de [IO Picture] para IO [Picture]
@@ -104,14 +140,14 @@ desenhaFant mapa temp imgs (Personagem {vida = v, tipo = Fantasma, posicao = pos
       | (mod (round (temp * 1000)) 1000) < 500 = obterimagem "fantasma1" imgs
       | otherwise = obterimagem "fantasma2" imgs
   translateParaPos pos t . turnEste dir . tamanhoscale tam $ getFantasmaPic
-desenhaFant _ _ _ _ = return blank 
+desenhaFant _ _ _ _ = return blank
 
 desenhaDK :: Mapa -> Tempo -> Imagem -> Personagem -> IO Picture
 desenhaDK _ _ _ (Personagem {tipo = Fantasma}) = return blank
 desenhaDK mapa temp imgs (Personagem {vida = v, tipo = MacacoMalvado, posicao = pos, direcao = dir, tamanho = tam})
   | (mod (round (temp * 1000)) 3000) < 1500 = translateParaPos pos ta  . tamanhoscale tam $ obterimagem "dkparado" imgs
-  | otherwise = dk 
-    where 
+  | otherwise = dk
+    where
       ta = tamanhoCompMapa mapa
       dk
         | (mod (round (temp * 1000)) 1000) < 500 = translateParaPos pos ta . tamanhoscale tam $ obterimagem "dkmove" imgs
@@ -120,8 +156,8 @@ desenhaDK mapa temp imgs (Personagem {vida = v, tipo = MacacoMalvado, posicao = 
 
 
 -- | Desenha a Pauline (o objetivo do jogo)
-desenhaPauline :: Estado -> IO Picture 
-desenhaPauline Estado {modo = EmJogo, imagens=imgs, jogo = Jogo {mapa= mapa@(Mapa _ p __)}, tempo= temp } 
+desenhaPauline :: Estado -> IO Picture
+desenhaPauline Estado {modo = EmJogo, imagens=imgs, jogo = Jogo {mapa= mapa@(Mapa _ p __)}, tempo= temp }
   |(mod (round (temp * 1000)) 1000) < 500  = turnEste Este $ star
   |otherwise = star
     where
@@ -146,13 +182,13 @@ desenhaJogo e = do
 -- | Desenha o mapa
 mapapicture :: Estado -> IO Picture
 mapapicture e@(Estado {jogo = Jogo {mapa= mapa}, imagens= imgs}) = do
-    let 
+    let
       (mapWidth, mapHeight) = tamanhoCompMapa mapa
       mapToPicture :: Estado -> IO Picture
       mapToPicture Estado {jogo = Jogo {mapa= Mapa _ _ mapa }} = do
         rows <- sequence $ zipWith (\row y -> Translate 0 (-fromIntegral y * blockSize) <$> rowToPicture row) mapa [0..]
         return $ Pictures rows
-      
+
       rowToPicture :: [Bloco] -> IO Picture
       rowToPicture row = do
         blockPictures <- sequence $ zipWith (\block x -> Translate (fromIntegral x * blockSize) 0 <$> blockPicture block) row [0..]
@@ -162,7 +198,7 @@ mapapicture e@(Estado {jogo = Jogo {mapa= mapa}, imagens= imgs}) = do
       blockPicture Vazio = return $ Color black $ rectangleSolid blockSize blockSize
       blockPicture Plataforma = obterimagem "plataforma" imgs
       blockPicture Escada = obterimagem "escada" imgs
-      blockPicture Alcapao = obterimagem "alcapao" imgs          
+      blockPicture Alcapao = obterimagem "alcapao" imgs
 
     mapaPic <- mapToPicture e
     return $ Translate (-mapWidth/2 + blockSize/2) (mapHeight/2 - blockSize/2) mapaPic
