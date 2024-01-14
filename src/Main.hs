@@ -8,7 +8,7 @@ import Tarefa3 (movimenta)
 import Desenha (desenha)
 import Reage (reageEvento)
 import Tarefa5
-import Imagens (getImages)
+import Imagens (getImages, Imagem)
 
 janela :: Display
 janela = InWindow
@@ -28,20 +28,16 @@ tempof _ e@(Estado {modo= MenuInicial _}) = return e {tempo= 0}
 tempof t e = 
   return $ e {jogo = movimenta 100 (realToFrac t) (jogo e), tempo= (tempo e) + realToFrac t}
 
-
-
 main :: IO ()
 main = do
   images <- getImages
-  let
-    estadoInicial = (Estado {modo= MenuInicial Menu, jogo= jogo01, tempo= 0, imagens= images})
-  --if valida $ jogo estadoInicial 
-    --then do
-  putStrLn "Jogo válido\nA carregar..."
-  playIO janela corFundo fr estadoInicial desenha reageEvento tempof
-    --else do
-      --putStrLn "Jogo inválido"
-
+  let estadoInicial = Estado {modo = MenuInicial Menu, jogo = jogo01, tempo = 0, imagens = images}
+  if valida $ jogo estadoInicial
+    then do
+      putStrLn "Jogo válido\nA carregar..."
+      playIO janela corFundo fr estadoInicial desenha reageEvento tempof
+    else do
+      putStrLn "Jogo inválido"
 
 {-
 
@@ -122,7 +118,7 @@ dk =
   Personagem
     { velocidade = (0.0, 0.0),
       tipo = MacacoMalvado,
-      posicao = (3.5, 5.6),
+      posicao = (5, 4.5),
       direcao = Este,
       tamanho = (1, 1),
       emEscada = False,
@@ -141,11 +137,11 @@ jogadorParado =
       tamanho = (0.8, 0.8),
       emEscada = False,
       ressalta = False,
-      vida = 10,
+      vida = 3,
       pontos = 0,
       aplicaDano = (False, 0)
     }
-martelo = (Martelo, (7, 7.5))
+martelo = (Martelo, (7, 4.5))
 moeda = (Moeda, (6, 7.5))
 
 jogo01 :: Jogo

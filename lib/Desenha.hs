@@ -22,10 +22,8 @@ desenhaMenu Estado {modo = MenuInicial Menu, imagens= imgs} = obterimagem "menu"
 desenhaMenu Estado {modo = MenuInicial Jogar, imagens= imgs} = obterimagem "menujogar" imgs
 desenhaMenu Estado {modo = MenuInicial Sair, imagens= imgs} = obterimagem "menusair" imgs
 desenhaMenu Estado {modo = MenuInicial Opcoes, imagens= imgs} = obterimagem "menuopcoes" imgs
-desenhaMenu Estado {modo = Pausa RetomaJogo} =
-  return $ Pictures [Color blue opcaoRetomaJogo, Color white opcaoSair]
-desenhaMenu Estado {modo = Pausa VoltaMenu} =
-  return $ Pictures [Color white opcaoRetomaJogo, Color blue opcaoSair]
+desenhaMenu Estado {modo = Pausa RetomaJogo,imagens=imgs} = obterimagem "pausacontinuar" imgs
+desenhaMenu Estado {modo = Pausa VoltaMenu,imagens=imgs} = obterimagem "pausasair" imgs
 desenhaMenu _ = return $ Pictures []
 
 opcaoSair = Translate (-150) (-100) $ Text "Sair"
@@ -158,7 +156,7 @@ desenhaDK mapa temp imgs (Personagem {vida = v, tipo = MacacoMalvado, posicao = 
 -- | Desenha a Pauline (o objetivo do jogo)
 desenhaPauline :: Estado -> IO Picture
 desenhaPauline Estado {modo = EmJogo, imagens=imgs, jogo = Jogo {mapa= mapa@(Mapa _ p __)}, tempo= temp }
-  |((mod (round (temp * 1000)) 1000) < 750) = turnEste Este $ star
+  |(mod (round (temp * 1000)) 1500) < 750 = turnEste Este $ star
   |otherwise = star
     where
       t = tamanhoCompMapa mapa
@@ -166,9 +164,27 @@ desenhaPauline Estado {modo = EmJogo, imagens=imgs, jogo = Jogo {mapa= mapa@(Map
           |(mod (round (temp * 1000)) 500) < 250 = translateParaPos p t  . tamanhoscale (0.7,0.7) $ obterimagem "pauline1" imgs
           |otherwise= translateParaPos p t . tamanhoscale (0.7,0.7) $ obterimagem "pauline2" imgs
 
+desenhaVida :: Estado -> IO Picture 
+desenhaVida Estado {modo= EmJogo, imagens=imgs, jogo= Jogo {jogador=Personagem {vida=v}}}
+  | v >= 3 = do
+    heart1 <- heart
+    heart2 <- Translate 100 0 <$> heart
+    heart3 <- Translate 200 0 <$> heart
+    return $ heart1 <> heart2 <> heart3
+  | v == 2 = do
+    heart1 <- heart
+    heart2 <- Translate 100 0 <$> heart
+    return $ heart1 <> heart2
+  | v == 1 = heart
+  | v <= 0 = return blank
+  where
+    heart = Translate (-650) (450) <$> obterimagem "coracao" imgs
+
+
 -- | Recebe as funções "desenha" que ocorrem durante o jogo e junta-as
 desenhaJogo :: Estado -> IO Picture
 desenhaJogo e = do
+  coracao <- desenhaVida e
   pauline <- desenhaPauline e
   mapa <- mapapicture e
   inimigos <- desenhaInimigos e
@@ -176,7 +192,7 @@ desenhaJogo e = do
   jogador <- desenhaJogador e
   let ini = pictures inimigos
       colec2 = pictures colec
-  return $ mapa <> colec2 <> pauline <> ini <> jogador -- <> junta as imagens
+  return $ mapa <> coracao <> colec2 <> pauline <> ini <> jogador -- <> junta as imagens
 
 
 -- | Desenha o mapa

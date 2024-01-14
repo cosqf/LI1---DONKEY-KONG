@@ -53,6 +53,10 @@ getImages = do
   Just sete <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/7.png"
   Just oito <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/8.png"
   Just nove <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/9.png"
+  Just pausacontinuar <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/pausacontinuar.png"
+  Just pausasair <- fmap scalePicture <$> loadJuicyPNG "lib/Imagens/pausasair.png"
+  Just coracao <- fmap scalePicture <$> loadJuicyPNG "lib/Imagens/coracao.png"
+
 
   return [
     ("marioanda1", marioanda1),
@@ -97,7 +101,10 @@ getImages = do
     ("6", seis),
     ("7", sete),
     ("8", oito),
-    ("9", nove)
+    ("9", nove),
+    ("pausacontinuar", pausacontinuar),
+    ("pausasair", pausasair),
+    ("coracao", coracao)
     ]
 
 obterimagem :: String -> Imagem -> IO Picture

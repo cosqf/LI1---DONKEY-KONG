@@ -3,31 +3,51 @@ import LI12324
 import Data.List (elemIndices)
 import Tarefa1 (overlap)
 
-blocodirecao :: Personagem -> Direcao -> Mapa -> Bloco     --indica o bloco posicionado no lado norte/sul/etc do personagem
+blocodirecao :: Personagem -> Direcao -> Mapa -> Bloco     -- |indica o bloco posicionado no lado norte/sul/etc do personagem
 blocodirecao (Personagem {posicao= (x,y)}) Norte mapa = blocopos (x,y-1) mapa
 blocodirecao (Personagem {posicao= (x,y)}) Sul mapa = blocopos (x,y+1) mapa
 blocodirecao (Personagem {posicao= (x,y)}) Oeste mapa = blocopos (x-1,y) mapa
 blocodirecao (Personagem {posicao= (x,y)}) Este mapa = blocopos (x+1,y) mapa
 
--- indica o bloco na coordenada (x,y)
+-- |indica o bloco na coordenada (x,y)
 blocopos :: Posicao -> Mapa -> Bloco    
 blocopos (x, y) (Mapa _ _ mapa)
-    |y<0 || y>fromIntegral maxy=Vazio      -- se estiver fora do mapa dá vazio
-    |x<0 || x>fromIntegral maxx=Vazio
+    |y<0 || y>fromIntegral maxy     -- se estiver fora do mapa dá vazio
+    ||x<0 || x>fromIntegral maxx=Vazio
     | otherwise = (mapa !! floor y !! floor x)
         where
             maxy = length mapa
             maxx = length (head mapa)
 
-        
---calcula todas as posicoes de um bloco no mapa
+-- |versão alternativa de blocopos
+
+blocopos' ::Posicao -> Mapa ->  Bloco
+blocopos' (x,y) (Mapa _ _ m ) = colunax (linhax m (floor y)) (floor x)                                                    
+
+linhax :: [[Bloco]] -> Int -> [Bloco]
+linhax [ ] _ = [ ]
+linhax (x:xs) n
+          | n == 0 = x 
+          | n > 0 = linhax xs (n-1)
+linhax _ _ = [ ]
+
+colunax :: [Bloco] -> Int -> Bloco
+colunax [ ] _ = Vazio
+colunax (x:xs) n
+          | n == 0 = x     
+          | n > 0 = colunax xs (n-1)              
+colunax _ _ = Vazio
+
+
+-- |calcula todas as posicoes de um bloco no mapa
 posb :: Mapa -> Bloco -> [Posicao] 
 posb (Mapa _ _ l) b = aux (map (elemIndices b) l) 1.0
   where
     aux :: [[Int]] -> Double -> [Posicao]
     aux [] _ = []
     aux ([]:c) x = aux c (x + 1)
-    aux ((a:b):c) x = (x, fromIntegral a) : aux (b:c) x
+    aux ((a:b):c) x = (fromIntegral a +1, x) : aux (b:c) x
+
 
 -- | Tamanho dos blocos por pixel
 blockSize :: Float
@@ -46,3 +66,5 @@ colisoesposicoes (x,y) (w,h) (x2,y2) (w2,h2)=
     hitbox2 = ((x2 - w2/2, y2 - h2/2), (x2 + w2/2, y2 + h2/2)) 
  in
     overlap hitbox1 hitbox2
+
+

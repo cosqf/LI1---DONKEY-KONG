@@ -25,7 +25,7 @@ atualiza listamov jogadormov Jogo {mapa= m, inimigos= i, colecionaveis= c, jogad
 -- | combina todas as funções de movimento relacionadas com os fantasmas
 allFantMov :: [Int] -> Mapa -> Personagem -> Maybe Acao 
 allFantMov x m p=
-        case (ressaltacheck m p, escFantFix m p, fantEscada m p (head x), fantMov p (last x)) of -- | prioridade : escFantFixA > fantEscadas > fantMov
+        case (escFantFix m p, ressaltacheck m p, fantEscada m p (head x), fantMov p (last x)) of -- | prioridade : escFantFixA > fantEscadas > fantMov
             (Just a,_,_,_)                       -> Just a
             (Nothing, Just a, _, _)              -> Just a
             (Nothing, Nothing, Just a, _)        -> Just a 
@@ -34,7 +34,7 @@ allFantMov x m p=
 
 
 -- |gera uma lista de ações aleatórias para os fantasmas
-fantMov :: Personagem -> Int -> Maybe Acao -- movimento aleatorio, fzr mais inteligente dps
+fantMov :: Personagem -> Int -> Maybe Acao 
 fantMov f n = func (f,n)
     where
         func :: (Personagem, Int) -> Maybe Acao
@@ -42,14 +42,16 @@ fantMov f n = func (f,n)
             |even x = Just AndarDireita 
             |otherwise = Just AndarEsquerda 
 
--- | decide se os fantasmas sobem as escadas ou não
+-- | decide se os fantasmas sobem/descem as escadas ou não
 fantEscada :: Mapa -> Personagem -> Int -> Maybe Acao
-fantEscada mapa f n= func (f,n)           -- fazer mais inteligente dps
+fantEscada mapa f n= func (f,n)          
     where
         func :: (Personagem, Int) -> Maybe Acao
-        func (p@Personagem {posicao= (x,y)},n)
-          |even n && blocopos (x,y+2) mapa == Escada = Just Descer
-          |even n && blocopos (posicao p) mapa == Escada = Just Subir
+        func (p@Personagem {posicao= (x,y), tamanho = (tx,ty)},n)
+          |even n && blocopos (x,y+2+ty/2) mapa == Escada = Just Descer
+          |even n && blocopos (posicao p) mapa == Escada 
+          || (blocopos (posicao p) mapa == Plataforma && blocopos (x,y+1+ty/2) mapa == Escada)
+          ||(emEscada p && blocopos (posicao p) mapa == Vazio && blocopos (x,y+ty/2) mapa == Plataforma) = Just Subir
           |otherwise = Nothing
 
 -- | Para o fantasma depois de subirem uma escada

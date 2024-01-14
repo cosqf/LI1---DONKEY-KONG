@@ -17,7 +17,7 @@ Todas as funções que veremos de seguida são usadas por esta função.
 -}
 
 valida :: Jogo -> Bool
-valida Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j } = 
+valida Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j } =
   chao m && validaJogador j && validaInimigo i && posicaoI i j m && numI i && iniVida i && alcapaoL m j && escadaValida m && checkmario j m  && checkcolec c m
 
 
@@ -40,7 +40,7 @@ posicaoI (f:xs) mario m@(Mapa (pm,_) _ _) = not (colisoesPersonagens f mario {po
 
 -- | Verifica se o número de inimigos é pelo menos 2.
 numI :: [Personagem] -> Bool    --numero de inimigos
-numI l = length l >=2 
+numI l = length l >=2
 
 -- | A função /iniVida/ confere se todos os fantasmas têm vida = 1
 iniVida :: [Personagem] -> Bool
@@ -62,6 +62,7 @@ ehAlcapao Alcapao = True
 ehAlcapao _       = False
 
 -- | Verifica se uma escada obedece às restrições.
+{-
 escadaValida :: Mapa -> Bool
 escadaValida (Mapa _ _ matriz) = all verificaEscada todasEscadas
   where
@@ -83,14 +84,27 @@ escadaValida (Mapa _ _ matriz) = all verificaEscada todasEscadas
     -- Encontrar todas as escadas na matriz
     escadas =
       concatMap (filter (== Escada)) matriz
+-}
 
+escadaValida :: Mapa -> Bool
+escadaValida mapa = all (escadasv mapa) (posb mapa Escada)
+  where
+    (_, mapHeight) = tamanhoCompMapa mapa
+
+    escadasv :: Mapa -> Posicao -> Bool
+    escadasv mapa (x, y)
+      | blocopos' (x, y+1) mapa == Alcapao || blocopos' (x, y-1) mapa == Alcapao = False
+      | blocopos' (x, y+1) mapa == Plataforma || blocopos' (x, y+1) mapa == Escada = True
+      | y-1 < 0 && y+1 <= realToFrac mapHeight = escadasv mapa (x, y+1)
+      | y-1 >= 0 && y+1 <= realToFrac mapHeight = escadasv mapa (x, y-1) || escadasv mapa (x, y+1)
+      | otherwise = False
 
 
 -- | Verifica se a posição do jogador coincide com um bloco vazio.
 
 checkmario :: Personagem -> Mapa -> Bool
-checkmario mario mapa = 
-  case blocopos (posicao mario) mapa of 
+checkmario mario mapa =
+  case blocopos (posicao mario) mapa of
     Vazio -> True
     Escada -> True
     _ -> False
