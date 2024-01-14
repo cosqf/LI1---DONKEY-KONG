@@ -12,7 +12,7 @@ import Funcoes
 import LI12324
 import Data.List (group)
 
-{- | A função principal que verifica se o jogo é válido. Se tal não se verificar, o jogo crasha. 
+{-| A função principal que verifica se o jogo é válido. Se tal não se verificar, o jogo crasha. 
 Todas as funções que veremos de seguida são usadas por esta função.
 
 @
@@ -57,18 +57,17 @@ iniVida = all vida
     vida (Personagem {tipo = _, vida = v}) = v == 1
 
 
---verificar se uma posição é do tipo Plataforma
+-- |verificar se uma posição é do tipo Plataforma
 ehPlataforma :: Bloco -> Bool
 ehPlataforma Plataforma = True
 ehPlataforma _          = False
 
---verificar se uma posição é do tipo Alcapao
+-- |verificar se uma posição é do tipo Alcapao
 ehAlcapao :: Bloco -> Bool
 ehAlcapao Alcapao = True
 ehAlcapao _       = False
 
--- | Verifica se uma escada obedece às restrições.
-
+{-| Verifica se uma escada obedece às restrições, True indica que o mapa possui escadas válidas, e o valor False indica que não possui.-}
 escadaValida :: Mapa -> Bool
 escadaValida mapa = all (escadasv mapa) (posb mapa Escada)
   where
@@ -82,29 +81,6 @@ escadaValida mapa = all (escadasv mapa) (posb mapa Escada)
       | y-1 >= 0 && y+1 <= realToFrac mapHeight = escadasv mapa (x, y-1) || escadasv mapa (x, y+1)
       | otherwise = False
 
-{-
-escadaValida :: Mapa -> Bool
-escadaValida (Mapa _ _ matriz) = all verificaEscada todasEscadas
-  where
-    todasEscadas = concatMap (separarEscadas . filter (== Escada)) matriz
-
-    separarEscadas :: [Bloco] -> [[Bloco]]
-    separarEscadas [] = []
-    separarEscadas lista =
-      let (escada, resto) = span (== Escada) lista
-      in escada : separarEscadas (dropWhile (== Escada) resto)
-
-    verificaEscada escada =
-      case escada of
-        [] -> False
-        (s : resto) ->
-          (ehPlataforma s || ehPlataforma (last escada))
-          && not (ehAlcapao s || ehAlcapao (last escada))
-
-    -- Encontrar todas as escadas na matriz
-    escadas =
-      concatMap (filter (== Escada)) matriz
--}
 
 -- | Verifica se a posição do jogador coincide com um bloco vazio.
 
@@ -150,7 +126,7 @@ criarColecionavel col pos matrizBlocos =
 
 
 
--- Gera um mapa através da semente introduzida
+
 {-
 gerarMapaDonkeyKong :: Semente -> Int -> Int -> Mapa
 gerarMapaDonkeyKong s largura altura numPlataformas = do
@@ -209,7 +185,7 @@ gerarMapaDonkeyKong s largura altura numPlataformas = do
 -}
 
 
--- Função auxiliar para obter o bloco na posição dada na matriz
+-- | Função auxiliar para obter o bloco na posição dada na matriz
 getBlocoNaPosicao :: Posicao -> [[Bloco]] -> Bloco
 getBlocoNaPosicao (x, y) matrizBlocos =
   if 0 <= round y && round y < length matrizBlocos &&
@@ -217,7 +193,7 @@ getBlocoNaPosicao (x, y) matrizBlocos =
     then matrizBlocos !! round y !! round x
     else Vazio
 
--- Função auxiliar para obter as posições ocupadas por um bloco do tamanho dado
+-- | Função auxiliar para obter as posições ocupadas por um bloco do tamanho dado
 posicoesBlocoPersonagem :: Posicao -> (Double, Double) -> [(Double, Double)]
 posicoesBlocoPersonagem (x, y) (tamanhoX, tamanhoY) =
   [(x', y') | x' <- [x, x + tamanhoX - 1], y' <- [y, y + tamanhoY - 1]]
