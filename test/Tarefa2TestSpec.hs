@@ -147,5 +147,67 @@ mapa03 =
 teste07 :: Test
 teste07 = "T07: As escadas não podem terminar em Alcapao" ~: False ~=? valida jogo01 {mapa = mapa03}
 
+
+test_numI :: Test
+test_numI = "Teste numI" ~:
+  test
+    [ "Teste 1" ~: True ~=? numI [Personagem { vida = 1 }, Personagem { vida = 1 }]
+    , "Teste 2" ~: False ~=? numI [Personagem { vida = 1 }]
+    , "Teste 3" ~: True ~=? numI [Personagem { vida = 1 }, Personagem { vida = 1 }, Personagem { vida = 1 }]
+    ]
+
+test_iniVida :: Test
+test_iniVida = "Teste iniVida" ~:
+  test
+    [ "Teste 1" ~: True ~=? iniVida [Personagem { tipo = MacacoMalvado, vida = 1 }]
+    , "Teste 2" ~: False ~=? iniVida [Personagem { tipo = Fantasma, vida = 2 }]
+    , "Teste 3" ~: True ~=? iniVida [Personagem { tipo = Fantasma, vida = 1 }]
+    , "Teste 4" ~: False ~=? iniVida [Personagem { tipo = MacacoMalvado, vida = 2 }]
+    , "Teste 5" ~: True ~=? iniVida [Personagem { tipo = Jogador, vida = 1 }]
+    , "Teste 6" ~: False ~=? iniVida [Personagem { tipo = Jogador, vida = 2 }]
+    ]
+
+
+test_ehPlataforma :: Test
+test_ehPlataforma = "Teste ehPlataforma" ~:
+  test
+    [ "Teste 1" ~: True ~=? ehPlataforma Plataforma
+    , "Teste 2" ~: False ~=? ehPlataforma Vazio
+    , "Teste 3" ~: False ~=? ehPlataforma Alcapao
+    ]
+
+test_ehAlcapao :: Test
+test_ehAlcapao = "Teste ehAlcapao" ~:
+  test
+    [ "Teste 1" ~: True ~=? ehAlcapao Alcapao
+    , "Teste 2" ~: False ~=? ehAlcapao Vazio
+    , "Teste 3" ~: False ~=? ehAlcapao Plataforma
+    ]
+
+
+
+test_escadaValida :: Test    --podia ter posto os mapas já definidos , mas estava cansado para confirmar 
+test_escadaValida = "Teste escadaValida" ~:
+  test
+    [ "Teste 1" ~: True ~=? escadaValida (Mapa ((0, 0), Norte) (0, 0) [[Escada, Escada, Escada], [Plataforma, Plataforma, Plataforma]])
+    , "Teste 2" ~: True ~=? escadaValida (Mapa ((0, 0), Norte) (0, 0) [[Escada, Escada], [Plataforma, Plataforma]])
+    , "Teste 3" ~: False ~=? escadaValida (Mapa ((0, 0), Norte) (0, 0) [[Escada, Plataforma, Escada], [Plataforma, Plataforma, Plataforma]])
+    ]
+
+
+test_checkmario :: Test
+test_checkmario = "Teste checkmario" ~:
+  test
+    [ "Teste 1" ~: True ~=? checkmario (Personagem { posicao = (0, 0) }) (Mapa ((0, 0), Norte) (0, 0) [[Vazio]])
+    , "Teste 2" ~: True ~=? checkmario (Personagem { posicao = (0, 0) }) (Mapa ((0, 0), Norte) (0, 0) [[Escada]])
+    , "Teste 3" ~: False ~=? checkmario (Personagem { posicao = (0, 0) }) (Mapa ((0, 0), Norte) (0, 0) [[Plataforma]])
+    ]
+
+
+
+
+
+
 testesTarefa2 :: Test
-testesTarefa2 = TestLabel "Tarefa2 (valida)" $ test [teste01, teste02, teste03, teste04, teste05, teste06, teste07]
+testesTarefa2 = TestLabel "Tarefa2 (valida)" $ test [teste01, teste02, teste03, teste04, teste05, teste06, teste07, test_numI, test_iniVida ,test_ehPlataforma,
+ test_ehAlcapao, test_escadaValida, test_checkmario]
