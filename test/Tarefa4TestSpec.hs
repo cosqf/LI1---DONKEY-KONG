@@ -4,6 +4,8 @@ import LI12324
 import Tarefa4 (atualiza)
 import Test.HUnit
 
+
+
 mapa01 :: Mapa
 mapa01 =
   Mapa
@@ -138,5 +140,92 @@ teste06 = TestLabel "T06" $ test [testeA, testeB]
     testeB = "B: Quando a acção é Descer, o jogador continua em escada" ~: (emEscada jogadorEmEscada) ~=? (emEscada . jogador $ resultadoSubir)
     resultadoSubir = atualiza [Nothing] (Just Descer) jogo01
 
+testAllFantMov :: Test
+testAllFantMov =
+  TestLabel "allFantMov" $ test [testA, testB, testC, testD]
+  where
+    testA ="" ~:
+      Just AndarEsquerda ~=? allFantMov mapa01 (inimigoParado { ressalta = True, posicao = (3, 7) })
+
+    testB ="" ~:
+      Just Descer ~=? allFantMov mapa01 (inimigoParado { posicao = (6, 7) })
+
+    testC = "" ~:
+      Just AndarEsquerda ~=? allFantMov mapa01 (inimigoParado { posicao = (5, 7), ressalta = False })
+
+    testD = "" ~:
+      Nothing ~=? allFantMov mapa01 (inimigoParado { posicao = (8.5, 7) })
+
+testFantMov :: Test
+testFantMov =
+  TestLabel "fantMov" $ test [testA, testB]
+  where
+    testA = "" ~:
+      Just AndarDireita ~=? fantMov (inimigoParado { posicao = (3, 7) })
+
+    testB = "" ~:
+      Just AndarEsquerda ~=? fantMov (inimigoParado { posicao = (3, 7), velocidade = (0, 0) })
+
+
+testFantEscada :: Test
+testFantEscada =
+  TestLabel "fantEscada" $ test [testA, testB, testC]
+  where
+    testA = "" ~:
+      Just Descer ~=? fantEscada mapa01 (inimigoParado { posicao = (6, 7) })
+
+    testB = "" ~:
+      Just Subir ~=? fantEscada mapa01 (inimigoParado { posicao = (6, 7), emEscada = True })
+
+    testC = "" ~:
+      Nothing ~=? fantEscada mapa01 (inimigoParado { posicao = (8.5, 7) })
+
+
+testEscFantFix :: Test
+testEscFantFix =
+  TestLabel "escFantFix" $ test [testA, testB]
+  where
+    testA = "" ~:
+      Just Parar ~=? escFantFix mapa01 (inimigoParado { posicao = (6, 7), emEscada = True, velocidade = (0, -5) })
+
+    testB = "" ~:
+      Nothing ~=? escFantFix mapa01 (inimigoParado { posicao = (6, 7), velocidade = (0, -5) })
+
+
+testRessaltaCheck :: Test
+testRessaltaCheck =
+  TestLabel "ressaltacheck" $ test [testA, testB, testC]
+  where
+    testA = "" ~:
+      Just AndarEsquerda ~=? ressaltacheck mapa01 (inimigoParado { ressalta = True, posicao = (2, 7) })
+
+    testB = "" ~:
+      Just AndarDireita ~=? ressaltacheck mapa01 (inimigoParado { ressalta = True, posicao = (4, 7) })
+
+    testC = "" ~:
+      Nothing ~=? ressaltacheck mapa01 (inimigoParado { posicao = (3, 7) })
+
+testMovimentosM :: Test
+testMovimentosM =
+  TestLabel "movimentosM" $ test [testA, testB, testC, testD, testE]
+  where
+    testA = "" ~:
+      jogadorParado { velocidade = (10, 0), direcao = Este, emEscada = False } ~=? movimentosM (Just AndarDireita) jogadorParado
+
+    testB = "" ~:
+      jogadorParado { velocidade = (-10, 0), direcao = Oeste, emEscada = False } ~=? movimentosM (Just AndarEsquerda) jogadorParado
+
+    testC = " Csubir escadar" ~:
+      jogadorParado { velocidade = (0, -10), direcao = Norte, emEscada = True } ~=? movimentosM (Just Subir) jogadorParado
+
+    testD = " descer escada" ~:
+      jogadorParado { velocidade = (0, 10), direcao = Sul, emEscada = True } ~=? movimentosM (Just Descer) jogadorParado
+
+    testE = " parar" ~:
+      jogadorParado { velocidade = (0, 0) } ~=? movimentosM (Just Parar) jogadorParado
+
+
+
 testesTarefa4 :: Test
-testesTarefa4 = TestLabel "Tarefa4 (atualiza)" $ test [teste01, teste02, teste03, teste04, teste05, teste06]
+testesTarefa4 = TestLabel "Tarefa4 (atualiza)" $ test [teste01, teste02, teste03, teste04, teste05, teste06, testAllFantMov,testFantMov,
+ testFantEscada,testEscFantFix,testRessaltaCheck,testMovimentosM]
