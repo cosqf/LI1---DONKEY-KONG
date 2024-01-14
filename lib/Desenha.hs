@@ -158,7 +158,7 @@ desenhaDK mapa temp imgs (Personagem {vida = v, tipo = MacacoMalvado, posicao = 
 -- | Desenha a Pauline (o objetivo do jogo)
 desenhaPauline :: Estado -> IO Picture
 desenhaPauline Estado {modo = EmJogo, imagens=imgs, jogo = Jogo {mapa= mapa@(Mapa _ p __)}, tempo= temp }
-  |(mod (round (temp * 1000)) 1000) < 500  = turnEste Este $ star
+  |((mod (round (temp * 1000)) 1000) < 750) = turnEste Este $ star
   |otherwise = star
     where
       t = tamanhoCompMapa mapa
