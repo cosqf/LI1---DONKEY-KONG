@@ -2,8 +2,7 @@ module Tarefa5 where
 import LI12324
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
-
-type Imagem = [(String, Picture)]
+import Imagens
 
 data Estado = Estado 
   {

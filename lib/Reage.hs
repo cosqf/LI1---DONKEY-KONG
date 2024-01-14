@@ -53,15 +53,16 @@ jogoreage (EventKey (SpecialKey KeyEsc) Down _ _) e@Estado {modo = EmJogo} =
   return e {modo = Pausa RetomaJogo}
 jogoreage (EventKey (SpecialKey KeyEsc) Down _ _) e@Estado {modo = Pausa _} =
   return e {modo = EmJogo}
-jogoreage event e@Estado {modo = EmJogo, jogo = Jogo {jogador= p, mapa=mapa, inimigos=ini}} = do 
+jogoreage event e@Estado {modo = EmJogo, jogo = Jogo {jogador= p, mapa=mapa@(Mapa _ pos _), inimigos=ini}, tempo = t} = do 
     let 
         acao = marioMovTeclas event (jogo e)
-        acaof = map (allFantMov mapa) ini 
-        vidamario = vida p
+        acaof = map (allFantMov (geraAleatorios (round t) 2) mapa) ini 
     putStrLn (show (jogo e))  -- para debug
-    if vidamario <= 0 then 
+    if vida p <= 0 then 
       return (e {modo=Mensagem Derrota}) else
-      return $ e {jogo= atualiza acaof acao (jogo e)}
+        if colisoesposicoes (posicao p) (tamanho p) pos (1,1) then 
+          return (e {modo= Mensagem Vitoria}) else
+        return $ e {jogo= atualiza acaof acao (jogo e)}
 jogoreage _ e = return e
 
 
@@ -77,7 +78,6 @@ reageMensagem _ estado e@Estado {modo = modo} = return (e{modo=Mensagem estado})
 marioMovTeclas :: Event -> Jogo -> Maybe Acao
 marioMovTeclas (EventKey (SpecialKey KeyUp) Down _ _) (Jogo {mapa= mapa, jogador= p@(Personagem {posicao= (x,y)})})
   |emEscada p = Just Subir 
-  |emEscada p && blocopos (x,y-0.5 )mapa == Plataforma = Just Subir
   |blocopos (posicao p) mapa == Escada && not (fst (aplicaDano p)) = Just Subir
   |otherwise= Just Parar 
 marioMovTeclas (EventKey (SpecialKey KeyUp) Up _ _) j = Just Parar

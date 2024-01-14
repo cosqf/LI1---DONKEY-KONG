@@ -23,31 +23,29 @@ atualiza listamov jogadormov Jogo {mapa= m, inimigos= i, colecionaveis= c, jogad
     }
 
 -- | combina todas as funções de movimento relacionadas com os fantasmas
-allFantMov :: Mapa -> Personagem -> Maybe Acao 
-allFantMov m p=
-  case (ressaltacheck m p, escFantFix m p, fantEscada m p, fantMov p) of -- | prioridade : escFantFixA > fantEscadas > fantMov
-    (Just a,_,_,_)                       -> Just a
-    (Nothing, Just a, _, _)              -> Just a
-    (Nothing, Nothing, Just a, _)        -> Just a 
-    (Nothing, Nothing, Nothing , Just a) -> Just a 
-    _                                    -> Nothing 
+allFantMov :: [Int] -> Mapa -> Personagem -> Maybe Acao 
+allFantMov x m p=
+        case (ressaltacheck m p, escFantFix m p, fantEscada m p (head x), fantMov p (last x)) of -- | prioridade : escFantFixA > fantEscadas > fantMov
+            (Just a,_,_,_)                       -> Just a
+            (Nothing, Just a, _, _)              -> Just a
+            (Nothing, Nothing, Just a, _)        -> Just a 
+            (Nothing, Nothing, Nothing , Just a) -> Just a 
+            _                                    -> Nothing 
 
 
 -- |gera uma lista de ações aleatórias para os fantasmas
-fantMov :: Personagem -> Maybe Acao -- movimento aleatorio, fzr mais inteligente dps
-fantMov f = func (f,n)
+fantMov :: Personagem -> Int -> Maybe Acao -- movimento aleatorio, fzr mais inteligente dps
+fantMov f n = func (f,n)
     where
-        [n] =geraAleatorios 10 1
         func :: (Personagem, Int) -> Maybe Acao
         func (p,x)
             |even x = Just AndarDireita 
             |otherwise = Just AndarEsquerda 
 
 -- | decide se os fantasmas sobem as escadas ou não
-fantEscada :: Mapa -> Personagem -> Maybe Acao
-fantEscada mapa f= func (f,n)           -- fazer mais inteligente dps
+fantEscada :: Mapa -> Personagem -> Int -> Maybe Acao
+fantEscada mapa f n= func (f,n)           -- fazer mais inteligente dps
     where
-        [n]= geraAleatorios 100 1 
         func :: (Personagem, Int) -> Maybe Acao
         func (p@Personagem {posicao= (x,y)},n)
           |even n && blocopos (x,y+2) mapa == Escada = Just Descer

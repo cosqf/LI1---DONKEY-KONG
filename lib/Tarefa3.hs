@@ -9,15 +9,15 @@ Módulo para a realização da Tarefa 3 de LI1 em 2023/24.
 module Tarefa3 where
 
 import LI12324
-import Tarefa1 
+import Tarefa1
 import Funcoes
 
 {-|atualiza o estado do jogo, de acordo com o tempo especificado, atualiza a posição dos personagens,dos colecionaveis, tal como os pontos de vida dos personagens-}
 movimenta :: Semente -> Tempo -> Jogo -> Jogo
 movimenta semente tempo Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j } =
     let
-        iniatualizado = map velocidades. flip fantasmahit j . map (flip colisao m) . map dkparado $ i
-        marioatualizado = marioEscCheck m . velocidades . fantasmamortopontos i . jogadorhit i . removeMartelo . queda m (0,10) . apanhacole c . flip colisao m $ j
+        iniatualizado = map (velocidades . (fantEscCheck m) . (flip colisao m) . (queda m (0,10)) ) . flip fantasmahit j . map dkparado $ i
+        marioatualizado = marioEscCheck m . velocidades . fantasmamortopontos i . jogadorhit (cooldownVida tempo 0 i j) i . removeMartelo . queda m (0,10) . apanhacole c . flip colisao m $ j
         colecatualizado = tiracole c j
         mapaatualizado = removeAlcapao j m
     in
@@ -29,6 +29,11 @@ movimenta semente tempo Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= 
             jogador = marioatualizado
         }
 
+
+
+
+
+-- | Certifica-se que o Donkey Kong está parado.
 dkparado :: Personagem -> Personagem
 dkparado p@(Personagem {tipo= MacacoMalvado}) = p {velocidade = (0,0)}
 dkparado p = p
@@ -39,11 +44,12 @@ fantasmahit [] _ = []
 fantasmahit (f@(Personagem {tipo=Fantasma, vida= v}):fs) h
     |overlap' (hitboxMartelo h) (hitboxPersonagem f) = f {vida= v-1} : fantasmahit fs h      -- |se a hitbox tocar nas hitboxes do fantasma perde uma vida
     |otherwise= f: fantasmahit fs h
+fantasmahit p ps = p
 
 {-|calcula a hitbox do martelo do jogador,Se o personagem estiver virado para a direita, a função retorna um retângulo que se estende uma unidade para a direita do personagem.
 Se o personagem estiver virado para a esquerda, a função retorna um retângulo que se estende uma unidade para a esquerda do personagem-}
 hitboxMartelo :: Personagem -> Maybe Hitbox
-hitboxMartelo mario@(Personagem {posicao = (x, y), direcao = d,tamanho= (xt,yt),emEscada=False, aplicaDano = (True, t)}) = 
+hitboxMartelo mario@(Personagem {posicao = (x, y), direcao = d,tamanho= (xt,yt),emEscada=False, aplicaDano = (True, t)}) =
     let (w, h) = tamanho mario      --copiei o formato da tarefa 1
     in
         case d of
@@ -52,23 +58,31 @@ hitboxMartelo mario@(Personagem {posicao = (x, y), direcao = d,tamanho= (xt,yt),
             _ ->  Nothing
 hitboxMartelo _ = Nothing
 
-fantasmamortopontos ::[Personagem] -> Personagem-> Personagem  
+fantasmamortopontos ::[Personagem] -> Personagem-> Personagem
 fantasmamortopontos [] m = m
 fantasmamortopontos (f@(Personagem {tipo=Fantasma, vida= v}):fs) mario@(Personagem{pontos = p})
     |overlap' (hitboxMartelo mario) (hitboxPersonagem f)= mario {pontos= p+500} -- | mais 500 pontos
     |otherwise= fantasmamortopontos fs mario
+fantasmamortopontos _ p = p
 
 {-|verifica se um personagem colide com o jogador,se um inimigo colidir com o jogador, o jogador perde uma vida-}
-jogadorhit ::[Personagem] -> Personagem -> Personagem -- |verifica se a colisao de personagens com o mario acontece
-jogadorhit [] m = m
-jogadorhit (x@(Personagem {vida=vf}):xs) mario@(Personagem{vida = v})
-    |vf <= 0 = jogadorhit xs mario
-    |colisoesPersonagens x mario = mario {vida= v-1} -- |se sim tira uma vida
-    |otherwise = jogadorhit xs mario
+jogadorhit :: Double -> [Personagem] -> Personagem -> Personagem -- |verifica se a colisao de personagens com o mario acontece
+jogadorhit _ [] m = m
+jogadorhit cool (x@(Personagem {vida=vf}):xs) mario@(Personagem{vida = v})
+    |vf <= 0 = jogadorhit cool xs mario
+    |cool== 0 && colisoesPersonagens x mario = mario {vida= v-1} -- |se sim tira uma vida
+    |otherwise = jogadorhit cool xs mario
 
+cooldownVida :: Tempo -> Double -> [Personagem] -> Personagem -> Double
+cooldownVida _ t [] _ = t
+cooldownVida temp t l@(x@(Personagem {vida = vf}) : xs) mario@(Personagem {vida = v})
+    | vf <= 0 = t
+    | colisoesPersonagens x mario = cooldownVida temp (temp+1) l mario  
+    | temp <= t = t - (1.0 / 50.0)
+    | otherwise = t
 
 {-|remove colecionáveis do mapa se o jogador colidir com eles-}
-tiracole :: [(Colecionavel, Posicao)] -> Personagem -> [(Colecionavel, Posicao)] 
+tiracole :: [(Colecionavel, Posicao)] -> Personagem -> [(Colecionavel, Posicao)]
 tiracole [] mario = []
 tiracole ((c,x):t) mario
     |colisoesHitB x (posicao mario) = tiracole t mario -- |remove do mapa os colecionaveis
@@ -82,10 +96,10 @@ apanhacole (((Moeda,x):t)) mario@(Personagem {pontos = p}) -- |verifica se a pos
     |otherwise = apanhacole t mario -- |se n continua a verificar 
 apanhacole (((Martelo,x):t)) mario@(Personagem {aplicaDano=(b,d)})
     |colisoesHitB x (posicao mario) = mario{aplicaDano =(True,10)} -- |se a posicao do mario for igual à do martelo, o mario recebe a condição de dar dano
-    |otherwise = apanhacole t mario 
+    |otherwise = apanhacole t mario
 
 {-|remove o martelo do jogador se o tempo de duração do martelo acabar-}
-removeMartelo :: Personagem -> Personagem -- |recebe o tempo e verifica se o tempo do martelo está a zero
+removeMartelo :: Personagem -> Personagem 
 removeMartelo mario@(Personagem {aplicaDano = (False,0)}) = mario
 removeMartelo mario@(Personagem {aplicaDano = (True , m)})
     |m <= 0 = mario {aplicaDano = (False, 0)}
@@ -95,7 +109,7 @@ removeMartelo mario@(Personagem {aplicaDano = (True , m)})
 -- | atualiza a velocidade e a direção do jogador para que ele caia
 queda :: Mapa -> Velocidade -> Personagem-> Personagem         -- | velocidade fica igual à gravidade e a direção a sul
 queda mapa gravidade p@(Personagem {posicao= (x,y), tamanho = (tx,ty)})
-    |fst (velocidade p) == 50 = p  
+    |fst (velocidade p) == 50 = p
     |blocopos (x,y+ty/2) mapa == Vazio = p {velocidade= gravidade, direcao = Sul, emEscada= False}
     |otherwise = p
 
@@ -110,7 +124,7 @@ removeAlcapao mario@(Personagem {posicao= (x,y), velocidade= (vx,vy)}) mapa@(Map
             troca _ _ (Mapa _ _ []) = []
             troca (x,1) b (Mapa a1 a2 (h:t)) = auxTroca (x,1) b h : t
             troca (x,y) b (Mapa a1 a2 l) = head l : troca (x,y-1) b (Mapa a1 a2 (tail l))
-                
+
             auxTroca ::  Posicao -> Bloco -> [Bloco] -> [Bloco]
             auxTroca _ _ [] = []
             auxTroca (1,1) b h = b:tail h
@@ -118,28 +132,45 @@ removeAlcapao mario@(Personagem {posicao= (x,y), velocidade= (vx,vy)}) mapa@(Map
 
 -- |verifica se um personagem colide com uma parede no mapa
 colisao :: Personagem -> Mapa -> Personagem
+colisao p@(Personagem {posicao= (x,y), direcao= d}) m@(Mapa _ _ blocos)
+    |emEscada p = p
+    |blocopos (x+0.5,y) m == Plataforma && d == Este = p{velocidade=(0,0)}
+    |blocopos (x-0.5,y) m == Plataforma && d == Oeste = p{velocidade=(0,0)}
+    |blocodirecao p Sul m == Plataforma && snd (velocidade p)>0 = p{velocidade=(0,0)}
+    |x<=0.3 && d == Oeste= p{velocidade = (0,0)}
+    |x>= mapWidth -0.3 && d == Este = p{velocidade = (0,0)}
+    |otherwise = p
+        where
+            mapWidth= fromIntegral $ length (head blocos)
+
+{-
+colisao :: Personagem -> Mapa -> Personagem
 colisao p@(Personagem {posicao= (x,y), direcao= d}) m
     |emEscada p = p
     |colisoesParede m p{posicao = (x+0.5,y)} && d == Este
     || colisoesParede m p{posicao = (x-0.5,y)} && d == Oeste 
-    ||blocodirecao p Sul m == Plataforma && snd (velocidade p)>0 =  p{velocidade=(0,0)}
+    ||blocodirecao p Sul m == Plataforma && snd (velocidade p)>0
+    ||x>= realToFrac comp && d == Este|| x<=0 && d== Oeste||y<=0 && d == Norte || y>= realToFrac alt && d == Sul  =  p{velocidade=(0,0)}
     |otherwise = p
+        where
+            (comp , alt) = tamanhoCompMapa m 
+-}
 
 -- |atualiza a posição de um personagem de acordo com sua velocidade
 velocidades :: Personagem -> Personagem -- | relacionar a velocidade com a posicao
 velocidades p@Personagem{velocidade=(0,0), posicao=(x,y)} = p
-velocidades p@Personagem{velocidade=(vx, 0), posicao=(x,y), tipo = Jogador} = 
+velocidades p@Personagem{velocidade=(vx, 0), posicao=(x,y), tipo = Jogador} =
     p { posicao = (x + (vx / 100), y)}
-velocidades p@Personagem{velocidade=(0,vy), posicao=(x,y), tipo = Jogador} = 
+velocidades p@Personagem{velocidade=(0,vy), posicao=(x,y), tipo = Jogador} =
     p { posicao = (x, y + (vy / 100))}
 velocidades p@Personagem{velocidade=(vx,vy), posicao=(x,y), tipo = Jogador, direcao= dir}
-    |dir == Este =p { posicao = (x + (vx / 30), y + (vy / 50)), velocidade = (0,10), direcao = dir} 
-    |otherwise = p { posicao = (x + (vx / 30), y + (vy / 50)), velocidade = (0,10), direcao = dir} 
-velocidades p@Personagem{velocidade=(vx, 0), posicao=(x,y)} = 
+    |dir == Este =p { posicao = (x + (vx / 30), y + (vy / 50)), velocidade = (0,10), direcao = dir}
+    |otherwise = p { posicao = (x + (vx / 30), y + (vy / 50)), velocidade = (0,10), direcao = dir}
+velocidades p@Personagem{velocidade=(vx, 0), posicao=(x,y)} =
     p { posicao = (x + (vx / 200), y)}
-velocidades p@Personagem{velocidade=(0,vy), posicao=(x,y)} = 
+velocidades p@Personagem{velocidade=(0,vy), posicao=(x,y)} =
     p { posicao = (x, y + (vy / 200))}
-velocidades p@Personagem{velocidade=(vx,vy), posicao=(x,y)} = 
+velocidades p@Personagem{velocidade=(vx,vy), posicao=(x,y)} =
     p { posicao = (x + (vx / 200), y + (vy / 200))}
 
 
@@ -148,10 +179,19 @@ marioEscCheck mapa p@(Personagem {posicao= (x,y), velocidade = (vx,vy), emEscada
     |esc && vy>0 && blocopos (x,y+ty/2+1) mapa == Vazio = p {velocidade = (0,0)}
     |otherwise = p
 
-{-
+fantEscCheck :: Mapa -> Personagem -> Personagem
+fantEscCheck mapa p@(Personagem {posicao= (x,y), velocidade = (vx,vy), emEscada = esc, tamanho= (tx,ty)})
+    |esc && (blocopos (x,y) mapa == Escada || blocopos (x,y) mapa == Plataforma ) && vy<=0 = p {velocidade = (0,vy), emEscada = True}
+    |esc && blocopos (x,y+ty/2) mapa /= Plataforma = p {velocidade = (0,vy)} 
+    |esc && blocopos (x,y+ty/2) mapa == Vazio = p {emEscada= False, velocidade = (vx,0)}
+    |esc = p {velocidade = (0,vy)}
+    |vy/=0 && blocopos (x,y+2) mapa == Escada = p {emEscada = True, velocidade = (vx,0)}
+    |otherwise = p
+
+
 -- | Arredonda a posição do y dos personagens
 roundPosicao ::  Mapa -> Personagem -> Personagem
-roundPosicao mapa p@Personagem { posicao = (x, y) } 
+roundPosicao mapa p@Personagem { posicao = (x, y) }
     | not (emEscada p) && blocopos (x,y+0.5) mapa /= Vazio = p { posicao = (x, yr) }
     | otherwise = p
     where
@@ -162,14 +202,7 @@ roundPosicao mapa p@Personagem { posicao = (x, y) }
                 else fromIntegral (round (c / 0.5)) * 0.5
         yr = roundCoordinate y
 
-colisao :: [Personagem] -> Mapa -> [Personagem]
-colisao (p@(Personagem {posicao = (x,y)}) :ps) mapa@(Mapa _ _ l)
-    |velocidade p /=(0,0) && direcao p == Este && blocodirecao p Este mapa == Plataforma || length (head l) == floor x = p {velocidade= (0,0)} : colisao ps mapa
-    |velocidade p /=(0,0) && direcao p == Oeste && blocodirecao p Oeste mapa == Plataforma || x== 0 = p {velocidade= (0,0)} : colisao ps mapa
-    |otherwise = colisao ps mapa
--}
 
- 
 overlap' :: Maybe Hitbox -> Hitbox -> Bool -- | mesmo que overlap mas aceita Maybe Hitbox
 overlap' Nothing _ = False
 overlap' (Just ((x1, y1), (x2, y2))) ((x3, y3), (x4, y4)) = x1 <= x4 && x2 >= x3 && y1 <= y4 && y2 >= y3
@@ -217,62 +250,3 @@ da estrela ou de um objecto coleccionável tem tamanho 1 × 1, i.e.             
 estrela/martelo/moeda ocupam um bloco da matriz na totalidade.
 -}
 
-
-
-mapa01 :: Mapa
-mapa01 =
-  Mapa
-    ((8.5, 6.5), Este)
-    (5, 1.5)
-    [ [Plataforma, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Plataforma],
-      [Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio],
-      [Vazio, Vazio, Vazio, Plataforma, Plataforma, Plataforma, Plataforma, Vazio, Vazio, Vazio],
-      [Vazio, Vazio, Vazio, Escada, Vazio, Vazio, Escada, Vazio, Vazio, Vazio],
-      [Vazio, Vazio, Vazio, Escada, Vazio, Vazio, Escada, Vazio, Vazio, Vazio],
-      [Vazio, Vazio, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Vazio, Vazio],
-      [Vazio, Vazio, Escada, Vazio, Vazio, Vazio, Vazio, Escada, Vazio, Vazio],
-      [Vazio, Vazio, Escada, Vazio, Vazio, Vazio, Vazio, Escada, Vazio, Vazio],
-      [Vazio, Plataforma, Plataforma, Plataforma, Alcapao, Plataforma, Plataforma, Plataforma, Plataforma, Vazio],
-      [Vazio, Escada, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio],
-      [Vazio, Escada, Vazio, Vazio, Vazio, Vazio, Vazio, Vazio, Escada, Vazio],
-      [Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma, Plataforma]
-    ]
-
-inimigoModelo =
-  Personagem
-    { velocidade = (0.0, 0.0),
-      tipo = Fantasma,
-      posicao = (2.5, 7.6),
-      direcao = Este,
-      tamanho = (1, 1),
-      emEscada = False,
-      ressalta = True,
-      vida = 1,
-      pontos = 0,
-      aplicaDano = (False, 0)
-    }
-
-jogadorParado =
-  Personagem
-    { velocidade = (0.0, 0.0),
-      tipo = Jogador,
-      posicao = (8.5, 7.5),
-      direcao = Oeste,
-      tamanho = (0.8, 0.8),
-      emEscada = False,
-      ressalta = False,
-      vida = 10,
-      pontos = 0,
-      aplicaDano = (False, 0)
-    }
-martelo = (Martelo, (7, 7.5))
-moeda = (Moeda, (6, 7.5))
-
-jogo01 :: Jogo
-jogo01 =
-  Jogo
-    { mapa = mapa01,
-      inimigos = [inimigoModelo],
-      colecionaveis = [martelo, moeda],
-      jogador = jogadorParado
-    }

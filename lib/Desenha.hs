@@ -90,34 +90,33 @@ desenhaColec Estado {modo = EmJogo, imagens= imgs, jogo = Jogo {colecionaveis = 
                         Moeda   -> translateParaPos pos t ( obterimagem "coin" imgs)) l
 
 -- | Desenha os fantasmas
-desenhaFantasmas :: Estado -> IO [Picture]
-desenhaFantasmas Estado {modo = EmJogo, imagens=imgs, jogo = Jogo {inimigos = [], mapa = mapa}, tempo = temp} = return [blank]
-desenhaFantasmas Estado {modo = EmJogo, imagens=imgs, jogo = Jogo {inimigos = l@(Personagem {vida= v, tipo = Fantasma}:ps), mapa = mapa}, tempo = temp} =
-    let
-      t = tamanhoCompMapa mapa
-      getFantasmaPic
-        | v <= 0 = return blank
-        | (mod (round (temp * 1000)) 1000) < 500 = obterimagem "fantasma1" imgs
-        | otherwise= obterimagem "fantasma2" imgs
-    in
-      mapM (\Personagem
-              { posicao = pos
-              , direcao = dir
-              , tamanho = tam
-              } -> translateParaPos pos t . turnEste dir . tamanhoscale tam $ getFantasmaPic) l
-desenhaFantasmas _ = return [blank]
+desenhaInimigos :: Estado -> IO [Picture]
+desenhaInimigos Estado {modo = EmJogo, imagens=imgs, jogo = Jogo {inimigos = [], mapa = mapa}, tempo = temp} = return [blank]
+desenhaInimigos Estado {modo = EmJogo, imagens=imgs, jogo = Jogo {inimigos = l, mapa = mapa}, tempo = temp} =
+  mapM (desenhaFant mapa temp imgs) l <> (mapM (desenhaDK mapa temp imgs) l)
 
-desenhaDK :: Estado -> IO Picture
-desenhaDK Estado {modo= EmJogo, tempo= t,imagens=imgs, jogo= Jogo {inimigos=
-  (Personagem {tipo= MacacoMalvado, posicao = pos, tamanho= tam}:xs),mapa = mapa}}
-  |(mod (round (t * 1000)) 3000) < 1500 = translateParaPos pos ta  . tamanhoscale tam $ obterimagem "dkparado" imgs
-  |otherwise = dk 
+desenhaFant :: Mapa -> Tempo -> Imagem  -> Personagem -> IO Picture
+desenhaFant mapa temp imgs (Personagem {vida = v, tipo = Fantasma, posicao = pos, direcao = dir, tamanho = tam})= do
+  let
+    t = tamanhoCompMapa mapa
+    getFantasmaPic
+      | v <= 0 = return blank
+      | (mod (round (temp * 1000)) 1000) < 500 = obterimagem "fantasma1" imgs
+      | otherwise = obterimagem "fantasma2" imgs
+  translateParaPos pos t . turnEste dir . tamanhoscale tam $ getFantasmaPic
+desenhaFant _ _ _ _ = return blank 
+
+desenhaDK :: Mapa -> Tempo -> Imagem -> Personagem -> IO Picture
+desenhaDK _ _ _ (Personagem {tipo = Fantasma}) = return blank
+desenhaDK mapa temp imgs (Personagem {vida = v, tipo = MacacoMalvado, posicao = pos, direcao = dir, tamanho = tam})
+  | (mod (round (temp * 1000)) 3000) < 1500 = translateParaPos pos ta  . tamanhoscale tam $ obterimagem "dkparado" imgs
+  | otherwise = dk 
     where 
       ta = tamanhoCompMapa mapa
       dk
-          |(mod (round (t * 1000)) 1000) < 500 = translateParaPos pos ta  . tamanhoscale tam $ obterimagem "dkmove" imgs
-          |otherwise= translateParaPos pos ta . tamanhoscale tam $ obterimagem "dkmove" imgs
-desenhaDK _ = return blank
+        | (mod (round (temp * 1000)) 1000) < 500 = translateParaPos pos ta . tamanhoscale tam $ obterimagem "dkmove" imgs
+        |otherwise = translateParaPos pos ta . turnEste Este . tamanhoscale tam $ obterimagem "dkmove" imgs
+
 
 
 -- | Desenha a Pauline (o objetivo do jogo)
@@ -136,19 +135,13 @@ desenhaJogo :: Estado -> IO Picture
 desenhaJogo e = do
   pauline <- desenhaPauline e
   mapa <- mapapicture e
-  fant <- desenhaFantasmas e
+  inimigos <- desenhaInimigos e
   colec <- desenhaColec e
   jogador <- desenhaJogador e
-  let fant2 = pictures fant
+  let ini = pictures inimigos
       colec2 = pictures colec
-  return $ mapa <> colec2 <> fant2 <> pauline <> jogador -- <> junta as imagens
+  return $ mapa <> colec2 <> pauline <> ini <> jogador -- <> junta as imagens
 
-tamanhoCompMapa :: Mapa -> (Float,Float)
-tamanhoCompMapa (Mapa _ _  mapa) = (fromIntegral (length (head mapa)) * blockSize, fromIntegral (length mapa) * blockSize)
-
--- | Tamanho dos blocos por pixel.
-blockSize :: Float
-blockSize = 80
 
 -- | Desenha o mapa
 mapapicture :: Estado -> IO Picture

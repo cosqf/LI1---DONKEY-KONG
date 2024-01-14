@@ -22,7 +22,7 @@ hitboxPersonagem p = let
 -- | Testa se um 'Personagem' colide com as paredes ou plataformas do 'Mapa'.
 colisoesParede :: Mapa -> Personagem -> Bool
 colisoesParede m@(Mapa _ _ blocos) personagem =
-  let hitboxPers = hitboxPersonagem personagem
+  let ((hXE,hYE),(hXD,hYD)) = hitboxPersonagem personagem
       (posX, posY) = posicao personagem
       (width, height) = tamanho personagem
       (blocoW, blocoH) = (1.0, 1.0)  -- | Assume que cada bloco tem tamanho 1x1
@@ -34,9 +34,35 @@ colisoesParede m@(Mapa _ _ blocos) personagem =
     -- | Verifica colisão com o topo do mapa
     posY - height/2 <= 0 ||
     -- | Verifica colisão com plataformas
-    case safeGet blocoX blocoY blocos of
-      Just Plataforma -> posY - height/2 < fromIntegral blocoY + blocoH
-      _               -> False
+    if width <=1 && height <=1
+      then case safeGet blocoX blocoY blocos of
+              Just Plataforma -> posY - height/2 < fromIntegral blocoY + blocoH
+              _               -> False
+      else 
+        case safeGet (blocoX - floor (width-1)) (blocoY - floor (height -1)) blocos of
+              Just Plataforma -> posY - height/2 < fromIntegral blocoY + blocoH
+              _               -> False
+        || case safeGet (blocoX + floor (width-1)) (blocoY + floor (height -1)) blocos of
+              Just Plataforma -> posY - height/2 < fromIntegral blocoY + blocoH
+              _               -> False
+        || case safeGet (blocoX + floor (width-1)) (blocoY - floor (height -1)) blocos of
+              Just Plataforma -> posY - height/2 < fromIntegral blocoY + blocoH
+              _               -> False
+        || case safeGet (blocoX - floor (width-1)) (blocoY + floor (height -1)) blocos of
+              Just Plataforma -> posY - height/2 < fromIntegral blocoY + blocoH
+              _               -> False
+        || case safeGet (blocoX - floor (width-1)) (blocoY) blocos of
+              Just Plataforma -> posY - height/2 < fromIntegral blocoY + blocoH
+              _               -> False
+        || case safeGet (blocoX + floor (width-1)) (blocoY ) blocos of
+              Just Plataforma -> posY - height/2 < fromIntegral blocoY + blocoH
+              _               -> False
+        || case safeGet (blocoX) (blocoY + floor (height -1)) blocos of
+              Just Plataforma -> posY - height/2 < fromIntegral blocoY + blocoH
+              _               -> False
+        || case safeGet (blocoX) (blocoY - floor (height -1)) blocos of
+              Just Plataforma -> posY - height/2 < fromIntegral blocoY + blocoH
+              _               -> False
 
 
 -- | Função auxiliar para obter um elemento de uma matriz com verificação de limites
@@ -45,8 +71,6 @@ safeGet x y m =
   if x >= 0 && y >= 0 && x < length (head m) && y < length m
     then Just ((m !! y) !! x)
     else Nothing
-
-
 
 -- | Testa se dois 'Personagens' colidem.
 colisoesPersonagens :: Personagem -> Personagem -> Bool

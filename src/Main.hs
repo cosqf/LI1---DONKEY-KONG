@@ -103,11 +103,25 @@ inimigoModelo =
       pontos = 0,
       aplicaDano = (False, 0)
     }
+
 inimigoModelo2 =
   Personagem
     { velocidade = (0.0, 0.0),
       tipo = Fantasma,
-      posicao = (3.5, 1.6),
+      posicao = (3.5, 10.6),
+      direcao = Este,
+      tamanho = (1, 1),
+      emEscada = False,
+      ressalta = True,
+      vida = 1,
+      pontos = 0,
+      aplicaDano = (False, 0)
+    }
+dk =
+  Personagem
+    { velocidade = (0.0, 0.0),
+      tipo = MacacoMalvado,
+      posicao = (3.5, 5.6),
       direcao = Este,
       tamanho = (1, 1),
       emEscada = False,
@@ -137,7 +151,7 @@ jogo01 :: Jogo
 jogo01 =
   Jogo
     { mapa = mapa01,
-      inimigos = [],
-      colecionaveis = [ moeda],
+      inimigos = [inimigoModelo, inimigoModelo2],
+      colecionaveis = [martelo, moeda],
       jogador = jogadorParado
     }
