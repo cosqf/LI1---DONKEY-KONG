@@ -1,3 +1,10 @@
+{-|
+Module      : Funções
+Description : Contém funções frequentemente usadas nas várias tarefas.
+Copyright   : Ivo Filipe Mendes Vieira <a103999@alunos.uminho.pt>
+              Filipa Cosquete Santos <a106837@alunos.uminho.pt>
+-}
+
 module Funcoes where 
 import LI12324 
 import Data.List (elemIndices)

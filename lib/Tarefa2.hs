@@ -14,6 +14,12 @@ import Data.List (group)
 
 {- | A função principal que verifica se o jogo é válido. Se tal não se verificar, o jogo crasha. 
 Todas as funções que veremos de seguida são usadas por esta função.
+
+@
+valida :: Jogo -> Bool
+valida Jogo {mapa= m, inimigos= i, colecionaveis = c, jogador= j } =
+  chao m && validaJogador j && validaInimigo i && posicaoI i j m && numI i && iniVida i && alcapaoL m j && escadaValida m && checkmario j m  && checkcolec c m
+@
 -}
 
 valida :: Jogo -> Bool
@@ -62,6 +68,20 @@ ehAlcapao Alcapao = True
 ehAlcapao _       = False
 
 -- | Verifica se uma escada obedece às restrições.
+
+escadaValida :: Mapa -> Bool
+escadaValida mapa = all (escadasv mapa) (posb mapa Escada)
+  where
+    (_, mapHeight) = tamanhoCompMapa mapa
+
+    escadasv :: Mapa -> Posicao -> Bool
+    escadasv mapa (x, y)
+      | blocopos' (x, y+1) mapa == Alcapao || blocopos' (x, y-1) mapa == Alcapao = False
+      | blocopos' (x, y+1) mapa == Plataforma || blocopos' (x, y+1) mapa == Escada = True
+      | y-1 < 0 && y+1 <= realToFrac mapHeight = escadasv mapa (x, y+1)
+      | y-1 >= 0 && y+1 <= realToFrac mapHeight = escadasv mapa (x, y-1) || escadasv mapa (x, y+1)
+      | otherwise = False
+
 {-
 escadaValida :: Mapa -> Bool
 escadaValida (Mapa _ _ matriz) = all verificaEscada todasEscadas
@@ -85,20 +105,6 @@ escadaValida (Mapa _ _ matriz) = all verificaEscada todasEscadas
     escadas =
       concatMap (filter (== Escada)) matriz
 -}
-
-escadaValida :: Mapa -> Bool
-escadaValida mapa = all (escadasv mapa) (posb mapa Escada)
-  where
-    (_, mapHeight) = tamanhoCompMapa mapa
-
-    escadasv :: Mapa -> Posicao -> Bool
-    escadasv mapa (x, y)
-      | blocopos' (x, y+1) mapa == Alcapao || blocopos' (x, y-1) mapa == Alcapao = False
-      | blocopos' (x, y+1) mapa == Plataforma || blocopos' (x, y+1) mapa == Escada = True
-      | y-1 < 0 && y+1 <= realToFrac mapHeight = escadasv mapa (x, y+1)
-      | y-1 >= 0 && y+1 <= realToFrac mapHeight = escadasv mapa (x, y-1) || escadasv mapa (x, y+1)
-      | otherwise = False
-
 
 -- | Verifica se a posição do jogador coincide com um bloco vazio.
 

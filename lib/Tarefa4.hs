@@ -12,7 +12,19 @@ import LI12324
 import Funcoes
 
 
+{-|Função principal da tarefa 4, recebe as ações que os personagens receberão e implementa-os.
 
+@
+atualiza :: [Maybe Acao] -> Maybe Acao -> Jogo -> Jogo
+atualiza listamov jogadormov Jogo {mapa= m, inimigos= i, colecionaveis= c, jogador= j} = 
+    Jogo
+    { mapa = m,
+    inimigos = movimentos listamov i,
+    colecionaveis = c,
+    jogador = movimentosM jogadormov j
+    }
+@
+-}
 atualiza :: [Maybe Acao] -> Maybe Acao -> Jogo -> Jogo
 atualiza listamov jogadormov Jogo {mapa= m, inimigos= i, colecionaveis= c, jogador= j} = 
     Jogo
@@ -22,7 +34,7 @@ atualiza listamov jogadormov Jogo {mapa= m, inimigos= i, colecionaveis= c, jogad
     jogador = movimentosM jogadormov j
     }
 
--- | combina todas as funções de movimento relacionadas com os fantasmas
+-- | Combina todas as funções de movimento relacionadas com os fantasmas
 allFantMov :: [Int] -> Mapa -> Personagem -> Maybe Acao 
 allFantMov x m p=
         case (escFantFix m p, ressaltacheck m p, fantEscada m p (head x), fantMov p (last x)) of -- | prioridade : escFantFixA > fantEscadas > fantMov
@@ -33,7 +45,7 @@ allFantMov x m p=
             _                                    -> Nothing 
 
 
--- |gera uma lista de ações aleatórias para os fantasmas
+-- |Gera uma lista de ações aleatórias para os fantasmas
 fantMov :: Personagem -> Int -> Maybe Acao 
 fantMov f n = func (f,n)
     where
@@ -42,7 +54,7 @@ fantMov f n = func (f,n)
             |even x = Just AndarDireita 
             |otherwise = Just AndarEsquerda 
 
--- | decide se os fantasmas sobem/descem as escadas ou não
+-- | Decide se os fantasmas sobem/descem as escadas ou não
 fantEscada :: Mapa -> Personagem -> Int -> Maybe Acao
 fantEscada mapa f n= func (f,n)          
     where
@@ -69,10 +81,7 @@ ressaltacheck mapa p@Personagem {ressalta= True, posicao= (x,y), velocidade= (vx
         _ -> Nothing
 
 
--- adicionar função para decidir oq os fantasmas fazem dps de descer/subir a escada?
-
-
-{-|implementa o movimento dos personagens-}
+-- |Implementa o movimento dos personagens
 movimentosM :: Maybe Acao -> Personagem -> Personagem 
 movimentosM (Just AndarDireita) p@(Personagem {velocidade= (vx,vy)}) = 
     p {velocidade = (10,vy), direcao= Este, emEscada= False}
@@ -80,7 +89,7 @@ movimentosM (Just AndarEsquerda) p@(Personagem {velocidade= (vx,vy)}) =
     p {velocidade = (-10,vy), direcao= Oeste, emEscada= False}
 movimentosM (Just Subir) (p) = p {velocidade = (0,-10), direcao= Norte,emEscada=True}
 movimentosM (Just Descer) (p) = p {velocidade = (0,10), direcao= Sul, emEscada= True}
-movimentosM (Just Parar) (p) = p {velocidade = (0,0)} 
+movimentosM (Just Parar) (p) = p {velocidade = (0,0), emEscada= False} 
 movimentosM (Just Saltar) p@(Personagem {velocidade= (vx,vy), emEscada = False,direcao= d })
     |d== Este = p {velocidade = (50, -50)} 
     |otherwise = p {velocidade = (-50, -50)} 

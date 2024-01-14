@@ -1,3 +1,11 @@
+{-|
+Module      : Main
+Description : Recebe as funções definidas nos outros ficheiros e corre o jogo
+Copyright   : Ivo Filipe Mendes Vieira <a103999@alunos.uminho.pt>
+              Filipa Cosquete Santos <a106837@alunos.uminho.pt>
+
+-}
+
 module Main where
 
 import LI12324
@@ -8,7 +16,15 @@ import Tarefa3 (movimenta)
 import Desenha (desenha)
 import Reage (reageEvento)
 import Tarefa5
-import Imagens (getImages, Imagem)
+import Imagens (getImages)
+
+{-| Detalhes sobre o jogo:
+
+* Janela de 1440 por 1080
+
+* Framerate de 25
+
+-}
 
 janela :: Display
 janela = InWindow
@@ -21,6 +37,7 @@ corFundo = black
 fr:: Int
 fr = 25
 
+-- | Função do tempo 
 tempof :: Float -> Estado -> IO Estado
 tempof _ e@(Estado {modo= Pausa _}) = return e
 tempof _  e@(Estado {modo= Mensagem _}) = return e
@@ -28,6 +45,8 @@ tempof _ e@(Estado {modo= MenuInicial _}) = return e {tempo= 0}
 tempof t e = 
   return $ e {jogo = movimenta 100 (realToFrac t) (jogo e), tempo= (tempo e) + realToFrac t}
 
+
+-- | Corre o jogo
 main :: IO ()
 main = do
   images <- getImages
@@ -91,7 +110,7 @@ inimigoModelo =
   Personagem
     { velocidade = (0.0, 0.0),
       tipo = Fantasma,
-      posicao = (2.5, 7.6),
+      posicao = (4.5, 7.6),
       direcao = Este,
       tamanho = (1, 1),
       emEscada = False,
@@ -105,7 +124,7 @@ inimigoModelo2 =
   Personagem
     { velocidade = (0.0, 0.0),
       tipo = Fantasma,
-      posicao = (3.5, 10.6),
+      posicao = (2, 10.6),
       direcao = Este,
       tamanho = (1, 1),
       emEscada = False,
@@ -118,9 +137,9 @@ dk =
   Personagem
     { velocidade = (0.0, 0.0),
       tipo = MacacoMalvado,
-      posicao = (5, 4.5),
+      posicao = (2,2),
       direcao = Este,
-      tamanho = (1, 1),
+      tamanho = (3,3),
       emEscada = False,
       ressalta = True,
       vida = 1,

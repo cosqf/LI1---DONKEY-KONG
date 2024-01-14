@@ -1,4 +1,9 @@
-{-# LANGUAGE BlockArguments #-}
+{-|
+Module      : Desenha
+Description : Todas as funções que geram a parte gráfica do jogo.
+Copyright   : Ivo Filipe Mendes Vieira <a103999@alunos.uminho.pt>
+              Filipa Cosquete Santos <a106837@alunos.uminho.pt>
+-}
 module Desenha where
 import LI12324
 import Graphics.Gloss
@@ -26,8 +31,6 @@ desenhaMenu Estado {modo = Pausa RetomaJogo,imagens=imgs} = obterimagem "pausaco
 desenhaMenu Estado {modo = Pausa VoltaMenu,imagens=imgs} = obterimagem "pausasair" imgs
 desenhaMenu _ = return $ Pictures []
 
-opcaoSair = Translate (-150) (-100) $ Text "Sair"
-opcaoRetomaJogo = Translate (-150) (100) $ Text "Jogar"
 
 -- | Desenha a mesagem de vitória/derrota
 desenhaMensagem :: Estado -> MensagemOp -> IO Picture
@@ -164,6 +167,7 @@ desenhaPauline Estado {modo = EmJogo, imagens=imgs, jogo = Jogo {mapa= mapa@(Map
           |(mod (round (temp * 1000)) 500) < 250 = translateParaPos p t  . tamanhoscale (0.7,0.7) $ obterimagem "pauline1" imgs
           |otherwise= translateParaPos p t . tamanhoscale (0.7,0.7) $ obterimagem "pauline2" imgs
 
+-- | Desenha os corações que simbolizam a vida do jogador
 desenhaVida :: Estado -> IO Picture 
 desenhaVida Estado {modo= EmJogo, imagens=imgs, jogo= Jogo {jogador=Personagem {vida=v}}}
   | v >= 3 = do

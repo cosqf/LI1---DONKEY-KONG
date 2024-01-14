@@ -1,3 +1,11 @@
+{-|
+Module      : Imagens
+Description : Todas as imagens do jogo são aqui definidas.
+Copyright   : Ivo Filipe Mendes Vieira <a103999@alunos.uminho.pt>
+              Filipa Cosquete Santos <a106837@alunos.uminho.pt>
+
+-}
+
 module Imagens where 
 import Graphics.Gloss
 import Graphics.Gloss.Juicy
@@ -8,6 +16,7 @@ type Imagem = [(String, Picture)]
 scalePicture :: Picture -> Picture
 scalePicture = scale 5.6 5.6
 
+-- | Função que "busca" as imagens na pasta
 getImages :: IO Imagem
 getImages = do
   Just marioanda1 <- fmap scalePicture <$> loadJuicyPNG "lib/Imagens/marioanda1.png"
@@ -39,8 +48,8 @@ getImages = do
   Just plataforma <- fmap (scale 10 10) <$> loadJuicyPNG "lib/Imagens/plataforma.png"
   Just pauline1 <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/pauline1.png"
   Just pauline2 <-fmap scalePicture <$> loadJuicyPNG "lib/Imagens/pauline2.png"
-  Just dkmove <-fmap (scale 5 5) <$> loadJuicyPNG "lib/Imagens/dkmove.png"
-  Just dkparado <-fmap (scale 5 5) <$> loadJuicyPNG "lib/Imagens/dkparado.png"
+  Just dkmove <-fmap (scale 3 3) <$> loadJuicyPNG "lib/Imagens/dkmove.png"
+  Just dkparado <-fmap (scale 3 3) <$> loadJuicyPNG "lib/Imagens/dkparado.png"
   Just gameover <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/gameover.png"
   Just gamewin <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/gamewin.png"
   Just zero <- fmap (scale 1 1) <$> loadJuicyPNG "lib/Imagens/0.png"
@@ -107,6 +116,7 @@ getImages = do
     ("coracao", coracao)
     ]
 
+-- | Função que devolve a imagem de acordo com o seu nome
 obterimagem :: String -> Imagem -> IO Picture
 obterimagem n imgs = do
   case lookup n imgs of

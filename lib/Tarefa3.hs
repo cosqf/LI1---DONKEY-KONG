@@ -12,11 +12,32 @@ import LI12324
 import Tarefa1
 import Funcoes
 
-{-|atualiza o estado do jogo, de acordo com o tempo especificado, atualiza a posição dos personagens,dos colecionaveis, tal como os pontos de vida dos personagens-}
+{-|
+Atualiza o estado do jogo, de acordo com o tempo especificado, atualiza a posição dos personagens, dos colecionaveis, tal como os pontos de vida dos personagens.
+
+@
 movimenta :: Semente -> Tempo -> Jogo -> Jogo
 movimenta semente tempo Jogo {mapa= m@(Mapa (posi,_) _ blocos), inimigos= i, colecionaveis = c, jogador= j } =
     let
-        iniatualizado = map (roundPosicao m . velocidades . fantEscCheck m . (flip colisao m)) . flip fantasmahit j . map (dkparado . (queda m (0,10)) )$ i
+        iniatualizado = map (roundPosicao m . velocidades . fantEscCheck m . (flip colisao m)) . flip fantasmahit j . map dkparado . map (queda m (0,10)) $ i
+        marioatualizado = marioEscCheck m . velocidades . fantasmamortopontos i . jogadorhit i posi . removeMartelo . queda m (0,10) . apanhacole c . flip colisao m $ j
+        colecatualizado = tiracole c j
+        mapaatualizado = removeAlcapao j m
+    in
+        Jogo
+        {
+            mapa = mapaatualizado,
+            inimigos = iniatualizado,
+            colecionaveis = colecatualizado,
+            jogador = marioatualizado
+        }
+@
+-}
+
+movimenta :: Semente -> Tempo -> Jogo -> Jogo
+movimenta semente tempo Jogo {mapa= m@(Mapa (posi,_) _ blocos), inimigos= i, colecionaveis = c, jogador= j } =
+    let
+        iniatualizado = map (roundPosicao m . velocidades . fantEscCheck m . (flip colisao m)) . flip fantasmahit j . map dkparado . map (queda m (0,10)) $ i
         marioatualizado = marioEscCheck m . velocidades . fantasmamortopontos i . jogadorhit i posi . removeMartelo . queda m (0,10) . apanhacole c . flip colisao m $ j
         colecatualizado = tiracole c j
         mapaatualizado = removeAlcapao j m
@@ -32,7 +53,7 @@ movimenta semente tempo Jogo {mapa= m@(Mapa (posi,_) _ blocos), inimigos= i, col
 
 -- | Certifica-se que o Donkey Kong está parado.
 dkparado :: Personagem -> Personagem
-dkparado p@(Personagem {tipo= MacacoMalvado}) = p {velocidade = (0,0)}
+dkparado p@(Personagem {tipo= MacacoMalvado, velocidade = (vx,vy)}) = p {velocidade = (0,vy)}
 dkparado p = p
 
 {-|verifica se um fantasma colide com um martelo, se a hitbox do martelo estiver sobreposta à hitboxdo fantasma, a vida do fantasma é atualizada e a lista é atualizada, caso não aconteça a lista fica igual-}
@@ -62,7 +83,7 @@ fantasmamortopontos (f@(Personagem {tipo=Fantasma, vida= v}):fs) mario@(Personag
     |otherwise= fantasmamortopontos fs mario
 fantasmamortopontos _ p = p
 
-{-|verifica se um personagem colide com o jogador,se um inimigo colidir com o jogador, o jogador perde uma vida-}
+{-|Verifica se um personagem colide com o jogador,se um inimigo colidir com o jogador, o jogador perde uma vida-}
 
 jogadorhit ::[Personagem]-> Posicao -> Personagem -> Personagem -- |verifica se a colisao de personagens com o mario acontece
 jogadorhit [] _ m = m
@@ -72,14 +93,14 @@ jogadorhit (x@(Personagem {vida=vf}):xs) posi mario@(Personagem{vida = v})
     |otherwise = jogadorhit xs posi mario
 
 
-{-|remove colecionáveis do mapa se o jogador colidir com eles-}
+{-|Remove colecionáveis do mapa se o jogador colidir com eles-}
 tiracole :: [(Colecionavel, Posicao)] -> Personagem -> [(Colecionavel, Posicao)]
 tiracole [] mario = []
 tiracole ((c,x):t) mario
     |colisoesHitB x (posicao mario) = tiracole t mario -- |remove do mapa os colecionaveis
     |otherwise= (c,x) : tiracole t mario
 
-{-|coleta coleccionável e atribui recompensas-}
+{-|Coleta coleccionável e atribui recompensas-}
 apanhacole:: [(Colecionavel, Posicao)] -> Personagem -> Personagem
 apanhacole [] mario = mario
 apanhacole (((Moeda,x):t)) mario@(Personagem {pontos = p}) -- |verifica se a posicao da moeda é igual à do mario
@@ -89,7 +110,7 @@ apanhacole (((Martelo,x):t)) mario@(Personagem {aplicaDano=(b,d)})
     |colisoesHitB x (posicao mario) = mario{aplicaDano =(True,10)} -- |se a posicao do mario for igual à do martelo, o mario recebe a condição de dar dano
     |otherwise = apanhacole t mario
 
-{-|remove o martelo do jogador se o tempo de duração do martelo acabar-}
+{-|Remove o martelo do jogador se o tempo de duração do martelo acabar-}
 removeMartelo :: Personagem -> Personagem
 removeMartelo mario@(Personagem {aplicaDano = (False,0)}) = mario
 removeMartelo mario@(Personagem {aplicaDano = (True , m)})
@@ -97,14 +118,14 @@ removeMartelo mario@(Personagem {aplicaDano = (True , m)})
     |otherwise= mario{aplicaDano = (True , m-(1/25))} -- framerate de 60s: 1/60
 
 
--- | atualiza a velocidade e a direção do jogador para que ele caia
+-- | Atualiza a velocidade e a direção do jogador para que ele caia
 queda :: Mapa -> Velocidade -> Personagem-> Personagem         -- | velocidade fica igual à gravidade e a direção a sul
 queda mapa gravidade p@(Personagem {posicao= (x,y), tamanho = (tx,ty)})
     |fst (velocidade p) == 50 = p
     |blocopos (x,y+ty/2) mapa == Vazio = p {velocidade= gravidade, direcao = Sul, emEscada= False}
     |otherwise = p
 
-{-|remove um alçapão do mapa se o jogador estiver sobre ele e esse bloco é preenchido com um bloco vazio-}
+{-|Remove um alçapão do mapa se o jogador estiver sobre ele e esse bloco é preenchido com um bloco vazio-}
 removeAlcapao :: Personagem -> Mapa -> Mapa
 removeAlcapao mario@(Personagem {posicao= (x,y), velocidade= (vx,vy)}) mapa@(Mapa a1 a2 l)
     |blocodirecao mario Sul mapa == Alcapao = Mapa a1 a2 (troca (fromIntegral (ceiling x),fromIntegral (ceiling y+1)) Vazio mapa)
@@ -121,33 +142,20 @@ removeAlcapao mario@(Personagem {posicao= (x,y), velocidade= (vx,vy)}) mapa@(Map
             auxTroca (1,1) b h = b:tail h
             auxTroca (x,1) b (h:t) = h: auxTroca (x-1,1) b t
 
--- |verifica se um personagem colide com uma parede no mapa
+-- |Verifica se um personagem colide com uma parede no mapa
 colisao :: Personagem -> Mapa -> Personagem
 colisao p@(Personagem {posicao= (x,y), direcao= d}) m@(Mapa _ _ blocos)
     |emEscada p = p
     |blocopos (x+0.5,y) m == Plataforma && d == Este = p{velocidade=(0,0)}
     |blocopos (x-0.5,y) m == Plataforma && d == Oeste = p{velocidade=(0,0)}
-    |blocodirecao p Sul m == Plataforma && snd (velocidade p)>0 = p{velocidade=(0,0)}
-    |x<=0.3 && d == Oeste= p{velocidade = (0,0)}
-    |x>= mapWidth -0.3 && d == Este = p{velocidade = (0,0)}
+    |blocodirecao p Sul m == Plataforma && snd (velocidade p)>0 && not (emEscada p) = p{velocidade=(0,0)}
+    |x<=0 && d == Oeste= p{velocidade = (0,0)}
+    |x>= mapWidth && d == Este = p{velocidade = (0,0)}
     |otherwise = p
         where
             mapWidth= fromIntegral $ length (head blocos)
-
-{-
-colisao :: Personagem -> Mapa -> Personagem
-colisao p@(Personagem {posicao= (x,y), direcao= d}) m
-    |emEscada p = p
-    |colisoesParede m p{posicao = (x+0.5,y)} && d == Este
-    || colisoesParede m p{posicao = (x-0.5,y)} && d == Oeste 
-    ||blocodirecao p Sul m == Plataforma && snd (velocidade p)>0
-    ||x>= realToFrac comp && d == Este|| x<=0 && d== Oeste||y<=0 && d == Norte || y>= realToFrac alt && d == Sul  =  p{velocidade=(0,0)}
-    |otherwise = p
-        where
-            (comp , alt) = tamanhoCompMapa m 
--}
-
--- |atualiza a posição de um personagem de acordo com sua velocidade
+            
+-- |Atualiza a posição de um personagem de acordo com sua velocidade
 velocidades :: Personagem -> Personagem -- | relacionar a velocidade com a posicao
 velocidades p@Personagem{velocidade=(0,0), posicao=(x,y)} = p
 velocidades p@Personagem{velocidade=(vx, 0), posicao=(x,y), tipo = Jogador} =
@@ -182,7 +190,7 @@ fantEscCheck mapa p@(Personagem {posicao= (x,y), velocidade = (vx,vy), emEscada 
     |not esc && blocopos (x,y) mapa == Escada && vy<0 = p {emEscada= True} -- se n estiver numa escada e quiser subir qnd encontra uma, fica em escada
     |otherwise = p
 
-
+-- | Arredonda a posição dos personagens 
 roundPosicao :: Mapa -> Personagem -> Personagem
 roundPosicao mapa p@Personagem { posicao = (x, y) }
     | not (emEscada p) && blocopos (x, y + 0.5) mapa /= Vazio = p { posicao = (x, yr) }
