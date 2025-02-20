@@ -2,7 +2,7 @@
 
 ## Descrição
 Este repositório contém o código, a documentação e testes para um projeto desenvolvido no âmbito de uma disciplina da universidade. Trata-se da implementação de um jogo utilizando a linguagem Haskell e a biblioteca gráfica Gloss.
-
+Nota: 18/20
 
 ## Executável
 
